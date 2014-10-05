@@ -37,7 +37,7 @@ done
 if [ "$prompt" = "yes" ]; then
     tput clear; echo "================== INSTALLING scikit-learn ==== Press Enter to Continue"; read answer 
 fi
-pip install -U scikit-learn
+sudo pip install -U scikit-learn
 
 
 # Install maven

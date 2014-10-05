@@ -1,67 +1,319 @@
 SQL Assignment Submission
 
 === 1
-<INSERT YOUR QUERY HERE>
+select e.name,
+       e.olympic_id,
+       p.name,
+       r.medal,
+       r.result
+from events e inner join
+     results r on e.event_id = r.event_id inner join
+     players p on r.player_id = p.player_id
+where e.event_id = 'E28';
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+                   name                   | olympic_id |                   name                   |  medal  | result 
+------------------------------------------+------------+------------------------------------------+---------+--------
+ 110m Hurdles Men                         | SYD2000    | Anier Garcia                             | GOLD    |     13
+ 110m Hurdles Men                         | SYD2000    | Mark Crear                               | BRONZE  |  13.22
+ 110m Hurdles Men                         | SYD2000    | Terrence Trammell                        | SILVER  |  13.16
+(3 rows)
 =============================================================================================
 
 === 2
-<INSERT YOUR QUERY HERE>
+select count(*)
+from players
+where trim(name) ~ '^[AEIOU]';
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+ count 
+-------
+    84
+(1 row)
 =============================================================================================
 
 === 3
-<INSERT YOUR QUERY HERE>
+select count(*)
+from events
+where olympic_id = 'SYD2000' and
+      result_noted_in = 'points';
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+ count 
+-------
+     2
+(1 row)
 =============================================================================================
 
 === 4
-<INSERT YOUR QUERY HERE>
+select c.name as country_name
+from countries c left outer join
+     teammedals t on t.country_id = c.country_id left outer join
+     individualmedals i on i.country_id = c.country_id left outer join
+     events e on t.event_id = e.event_id or i.event_id = e.event_id
+where e.olympic_id = 'SYD2000'
+group by c.name, c.population
+order by (count(i.medal) + count(t.medal)) * 1000000000 / c.population asc
+limit 5;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+               country_name               
+------------------------------------------
+ China                                   
+ Mexico                                  
+ Brazil                                  
+ Canada                                  
+ France                                  
+(5 rows)
 =============================================================================================
 
 === 5
-<INSERT YOUR QUERY HERE>
+select c.name as country_name,
+       count(p.name) as num_players
+from countries c inner join
+     players p on c.country_id = p.country_id
+group by c.name
+order by c.name;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+               country_name               | num_players 
+------------------------------------------+-------------
+ Algeria                                  |           4
+ Argentina                                |           1
+ Australia                                |          34
+ Austria                                  |           2
+ Barbados                                 |           1
+ Belarus                                  |           7
+ Brazil                                   |           9
+ Bulgaria                                 |           1
+ Cameroon                                 |           1
+ Canada                                   |           1
+ China                                    |           8
+ Costa Rica                               |           1
+ Croatia                                  |           1
+ Cuba                                     |          12
+ Czech Republic                           |           3
+ Denmark                                  |           2
+ Dominican Republic                       |           1
+ Eritrea                                  |           1
+ Estonia                                  |           2
+ Ethiopia                                 |          12
+ Finland                                  |           1
+ France                                   |          10
+ Germany                                  |          22
+ Greece                                   |           7
+ Hungary                                  |           4
+ Iceland                                  |           1
+ Ireland                                  |           1
+ Italy                                    |          12
+ Jamaica                                  |          18
+ Japan                                    |          16
+ Kazakhstan                               |           2
+ Kenya                                    |          13
+ Latvia                                   |           2
+ Lithuania                                |           2
+ Mexico                                   |           3
+ Morocco                                  |           5
+ Mozambique                               |           1
+ Netherlands                              |          13
+ Nigeria                                  |          12
+ Norway                                   |           3
+ Poland                                   |           5
+ Portugal                                 |           3
+ Romania                                  |          10
+ Russia                                   |          38
+ Saudi Arabia                             |           1
+ Slovakia                                 |           1
+ Slovenia                                 |           1
+ South Africa                             |          10
+ Spain                                    |           4
+ Sri Lanka                                |           1
+ Sweden                                   |           9
+ The Bahamas                              |           5
+ Trinidad and Tobago                      |           2
+ Turkey                                   |           1
+ Ukraine                                  |           9
+ United Kingdom                           |          12
+ United States                            |          88
+ Zimbabwe                                 |           1
+(58 rows)
 =============================================================================================
 
 === 6
-<INSERT YOUR QUERY HERE>
+select name
+from players
+where trim(name) ~ 'd$'
+order by country_id asc,
+         birthdate desc;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+                   name                   
+------------------------------------------
+ Abderrahmane Hammad                     
+ Mark Ormrod                             
+ Yunaika Crawford                        
+ Lars Conrad                             
+ Beverly McDonald                        
+ Michael Blackwood                       
+ Pieter van den Hoogenband               
+ Trine Hattestad                         
+ Darian Townsend                         
+ BJ Bedford                              
+ Amanda Beard                            
+ Shawn Crawford                          
+ Jon Drummond                            
+(13 rows)
 =============================================================================================
 
 === 7
-<INSERT YOUR QUERY HERE>
+select extract(year from p.birthdate) as birthyear,
+       count(distinct p.player_id) as num_players,
+       count(r.medal) as num_gold_medals
+from players p left outer join
+     results r on p.player_id = r.player_id and r.medal = 'GOLD'
+group by birthyear;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+ birthyear | num_players | num_gold_medals 
+-----------+-------------+-----------------
+      1971 |          45 |              16
+      1972 |          29 |              10
+      1973 |          31 |              13
+      1974 |          31 |              21
+      1975 |          32 |              20
+      1976 |          24 |              25
+      1977 |          26 |               8
+      1978 |          40 |              24
+      1979 |          36 |              10
+      1980 |          29 |              20
+      1981 |          22 |              10
+      1982 |          19 |               9
+      1983 |          23 |               9
+      1984 |          30 |              15
+      1985 |          36 |              21
+(15 rows)
 =============================================================================================
 
 === 8
-<INSERT YOUR QUERY HERE>
+select i.event_id,
+       e.name
+from individualmedals i inner join
+     events e on i.event_id = e.event_id
+where medal = 'GOLD'
+group by i.event_id,
+         e.name
+having count(medal) > 1;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+ event_id |                   name                   
+----------+------------------------------------------
+ E108     | 50m Freestyle Men                       
+(1 row)
 =============================================================================================
 
 === 9
-<INSERT YOUR QUERY HERE>
+select s.event_id,
+       cast((s.result - g.result) as decimal(10,2)) as difference
+from (select r.event_id as event_id,
+             r.result as result
+     from results r inner join
+          events e on r.event_id = e.event_id
+     where e.name like '%Butterfly%' and r.medal = 'SILVER'
+     ) as s inner join
+     (select r.event_id as event_id,
+             r.result as result
+     from results r inner join
+          events e on r.event_id = e.event_id
+     where e.name like '%Butterfly%' and r.medal = 'GOLD'
+     ) as g on s.event_id = g.event_id;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+ event_id | difference 
+----------+------------
+ E14      |       0.18
+ E44      |       0.41
+ E16      |       1.36
+ E46      |       0.70
+ E13      |       0.04
+ E43      |       0.52
+ E15      |       0.32
+ E45      |       0.31
+(8 rows)
 =============================================================================================
 
 === 10
-<INSERT YOUR QUERY HERE>
+create table teammedals as
+    select distinct c.country_id,
+           r.event_id,
+           r.medal,
+           r.result
+    from results r inner join
+         events e on r.event_id = e.event_id inner join
+         players p on r.player_id = p.player_id inner join
+         countries c on c.country_id = p.country_id
+    where e.is_team_event = 1;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+SELECT 60
 =============================================================================================
 
 === 11
-<INSERT YOUR QUERY HERE>
+select c.name,
+       count(p.name)
+from countries c left outer join
+     players p on c.country_id = p.country_id
+     and extract(year from p.birthdate) = 1975
+group by c.name;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+                   name                   | count 
+------------------------------------------+-------
+ Costa Rica                               |     0
+ Eritrea                                  |     1
+ Estonia                                  |     1
+ Latvia                                   |     0
+ Turkey                                   |     0
+ Germany                                  |     1
+ France                                   |     0
+ Algeria                                  |     0
+ Slovenia                                 |     0
+ Japan                                    |     3
+ Jamaica                                  |     1
+ Spain                                    |     0
+ Ukraine                                  |     0
+ Belarus                                  |     1
+ Cameroon                                 |     0
+ Zimbabwe                                 |     0
+ Ireland                                  |     0
+ Saudi Arabia                             |     0
+ Denmark                                  |     1
+ Russia                                   |     0
+ Iceland                                  |     0
+ Lithuania                                |     1
+ Netherlands                              |     0
+ Portugal                                 |     0
+ Barbados                                 |     0
+ Nigeria                                  |     0
+ Romania                                  |     1
+ The Bahamas                              |     0
+ Dominican Republic                       |     0
+ Trinidad and Tobago                      |     0
+ Canada                                   |     0
+ Austria                                  |     0
+ China                                    |     0
+ Australia                                |     3
+ Kenya                                    |     0
+ South Africa                             |     4
+ United States                            |     5
+ Poland                                   |     0
+ Argentina                                |     0
+ Slovakia                                 |     0
+ United Kingdom                           |     1
+ Kazakhstan                               |     1
+ Croatia                                  |     0
+ Czech Republic                           |     1
+ Cuba                                     |     1
+ Italy                                    |     1
+ Sweden                                   |     2
+ Ethiopia                                 |     1
+ Greece                                   |     0
+ Brazil                                   |     1
+ Morocco                                  |     0
+ Hungary                                  |     0
+ Mozambique                               |     0
+ Finland                                  |     0
+ Mexico                                   |     0
+ Sri Lanka                                |     0
+ Bulgaria                                 |     0
+ Norway                                   |     0
+(58 rows)
 =============================================================================================
