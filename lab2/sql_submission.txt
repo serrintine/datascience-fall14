@@ -1,21 +1,18 @@
 SQL Assignment Submission
 
 === 1
-select e.name,
-       e.olympic_id,
-       p.name,
+select p.name,
        r.medal,
        r.result
-from events e inner join
-     results r on e.event_id = r.event_id inner join
+from results r inner join
      players p on r.player_id = p.player_id
-where e.event_id = 'E28';
+where r.event_id = 'E28';
 **************** RESULT ***************************************************************
-                   name                   | olympic_id |                   name                   |  medal  | result 
-------------------------------------------+------------+------------------------------------------+---------+--------
- 110m Hurdles Men                         | SYD2000    | Anier Garcia                             | GOLD    |     13
- 110m Hurdles Men                         | SYD2000    | Mark Crear                               | BRONZE  |  13.22
- 110m Hurdles Men                         | SYD2000    | Terrence Trammell                        | SILVER  |  13.16
+                   name                   |  medal  | result 
+------------------------------------------+---------+--------
+ Anier Garcia                             | GOLD    |     13
+ Mark Crear                               | BRONZE  |  13.22
+ Terrence Trammell                        | SILVER  |  13.16
 (3 rows)
 =============================================================================================
 
@@ -43,23 +40,29 @@ where olympic_id = 'SYD2000' and
 =============================================================================================
 
 === 4
-select c.name as country_name
-from countries c left outer join
-     teammedals t on t.country_id = c.country_id left outer join
-     individualmedals i on i.country_id = c.country_id left outer join
-     events e on t.event_id = e.event_id or i.event_id = e.event_id
-where e.olympic_id = 'SYD2000'
+select c.name
+from countries c
+     full outer join
+     (select tm.*
+      from teammedals tm inner join
+           events e on tm.event_id = e.event_id
+      where e.olympic_id='SYD2000') as t on t.country_id = c.country_id
+     full outer join
+     (select im.*
+      from individualmedals im inner join
+           events e on im.event_id = e.event_id
+      where e.olympic_id='SYD2000') as i on i.country_id = c.country_id
 group by c.name, c.population
-order by (count(i.medal) + count(t.medal)) * 1000000000 / c.population asc
+order by (count(i.medal) + count(t.medal)) * 10000000000 / c.population asc
 limit 5;
 **************** RESULT ***************************************************************
-               country_name               
+                   name                   
 ------------------------------------------
- China                                   
- Mexico                                  
- Brazil                                  
- Canada                                  
- France                                  
+ Zimbabwe                                
+ Dominican Republic                      
+ Turkey                                  
+ Croatia                                 
+ Argentina                               
 (5 rows)
 =============================================================================================
 
@@ -160,30 +163,42 @@ order by country_id asc,
 =============================================================================================
 
 === 7
-select extract(year from p.birthdate) as birthyear,
-       count(distinct p.player_id) as num_players,
-       count(r.medal) as num_gold_medals
-from players p left outer join
-     results r on p.player_id = r.player_id and r.medal = 'GOLD'
-group by birthyear;
+select extract(year from pl.birthdate) as birthyear,
+       count(distinct pl.player_id) as num_players,
+       count(re.medal) as num_gold_medals
+from (select distinct p.player_id as player_id,
+             p.birthdate as birthdate
+      from players p inner join
+           results r on r.player_id = p.player_id inner join
+           events e on r.event_id = e.event_id
+      where e.olympic_id = 'ATH2004') as pl
+     left outer join
+     (select r.event_id,
+             r.player_id,
+             r.medal
+      from results r inner join
+           events e on r.event_id = e.event_id
+      where e.olympic_id = 'ATH2004') as re
+     on pl.player_id = re.player_id and re.medal = 'GOLD'
+group by birthyear
 **************** RESULT ***************************************************************
  birthyear | num_players | num_gold_medals 
 -----------+-------------+-----------------
-      1971 |          45 |              16
-      1972 |          29 |              10
-      1973 |          31 |              13
-      1974 |          31 |              21
-      1975 |          32 |              20
-      1976 |          24 |              25
-      1977 |          26 |               8
-      1978 |          40 |              24
-      1979 |          36 |              10
-      1980 |          29 |              20
-      1981 |          22 |              10
-      1982 |          19 |               9
-      1983 |          23 |               9
-      1984 |          30 |              15
-      1985 |          36 |              21
+      1971 |          26 |               9
+      1972 |          15 |               3
+      1973 |          14 |               5
+      1974 |          22 |               9
+      1975 |          17 |              11
+      1976 |          12 |              17
+      1977 |          15 |               4
+      1978 |          29 |              15
+      1979 |          18 |               7
+      1980 |          18 |              12
+      1981 |          11 |               2
+      1982 |           8 |               2
+      1983 |          13 |               2
+      1984 |          17 |               7
+      1985 |          21 |              11
 (15 rows)
 =============================================================================================
 
@@ -208,28 +223,28 @@ select s.event_id,
        cast((s.result - g.result) as decimal(10,2)) as difference
 from (select r.event_id as event_id,
              r.result as result
-     from results r inner join
-          events e on r.event_id = e.event_id
-     where e.name like '%Butterfly%' and r.medal = 'SILVER'
+      from results r inner join
+           events e on r.event_id = e.event_id
+      where e.name like '%Butterfly%' and
+            r.medal = 'SILVER' and
+            e.olympic_id = 'ATH2004'
      ) as s inner join
      (select r.event_id as event_id,
              r.result as result
-     from results r inner join
-          events e on r.event_id = e.event_id
-     where e.name like '%Butterfly%' and r.medal = 'GOLD'
+      from results r inner join
+           events e on r.event_id = e.event_id
+      where e.name like '%Butterfly%' and
+            r.medal = 'GOLD' and
+            e.olympic_id = 'ATH2004'
      ) as g on s.event_id = g.event_id;
 **************** RESULT ***************************************************************
  event_id | difference 
 ----------+------------
- E14      |       0.18
- E44      |       0.41
- E16      |       1.36
- E46      |       0.70
  E13      |       0.04
  E43      |       0.52
  E15      |       0.32
  E45      |       0.31
-(8 rows)
+(4 rows)
 =============================================================================================
 
 === 10
