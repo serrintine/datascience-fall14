@@ -12,6 +12,17 @@ create view numberofmedals as
         group by c.name);
 **************** RESULT ***************************************************************
 CREATE VIEW
+
+select * from numberofmedals limit 5;
+
+               country_name               | number_of_medals 
+------------------------------------------+------------------
+ Costa Rica                               |                2
+ Latvia                                   |                2
+ Estonia                                  |                2
+ Eritrea                                  |                1
+ Turkey                                   |                1
+(5 rows)
 =============================================================================================
 
 === 2
@@ -47,7 +58,8 @@ create or replace function insert_row() returns trigger as
 $body$
 begin
   if right(new.event_id, 2) in
-     (00,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)
+     ('81','82','83','84','85','86','87','88','89','90',
+      '91','92','93','94','95','96','97','98','99','00')
   then
     insert into teammedals
     select distinct c.country_id,
@@ -59,12 +71,15 @@ begin
          players p on r.player_id = p.player_id inner join
          countries c on c.country_id = p.country_id
     where e.event_id = new.event_id;
+    delete from teammedals where ctid not in
+    (select max(ctid) from teammedals group by teammedals.*);
   end if;
   return new;
 end;
 $body$
 language plpgsql;
 
+drop trigger if exists update_teammedals on results;
 create trigger update_teammedals
        after insert on results
        for each row
@@ -72,16 +87,72 @@ create trigger update_teammedals
 **************** RESULT ***************************************************************
 CREATE FUNCTION
 CREATE TRIGGER
+
+select * from teammedals where event_id = 'E90';
+ country_id | event_id |  medal  | result 
+------------+----------+---------+--------
+ USA        | E90      | GOLD    |  37.61
+ BRA        | E90      | SILVER  |   37.9
+ CUB        | E90      | BRONZE  |  38.04
+(3 rows)
+
+insert into players
+       values('Test player', 'TESTPLAY01', 'RUS', null);
+INSERT 0 1
+
+insert into results
+       values('E90', 'TESTPLAY01', 'COPPER', 40.01);
+INSERT 0 1
+
+select * from teammedals where event_id = 'E90';
+ country_id | event_id |  medal  | result 
+------------+----------+---------+--------
+ USA        | E90      | GOLD    |  37.61
+ CUB        | E90      | BRONZE  |  38.04
+ RUS        | E90      | COPPER  |  40.01     <--- a new medal in the table!
+ BRA        | E90      | SILVER  |   37.9
+(4 rows)
 =============================================================================================
 
 === 4
-select query_to_xml('select e.event_id, r.player_id
-from events e inner join
-     results r on e.event_id = r.event_id inner join
-     players p on r.player_id = p.player_id
-where e.olympic_id = ''ATH2004'' and
-      r.medal = ''GOLD'' and is_team_event=1', false, true, '')
+select xmlelement(name medal, 
+                  event_name,
+                  player_name)
+from (select xmlelement(name event, trim(e.name)) as event_name,
+             xmlelement(name players,
+                        xmlagg(xmlelement(name player, trim(p.name)))
+                       ) as player_name
+      from events e inner join
+           results r on e.event_id = r.event_id inner join
+           players p on r.player_id = p.player_id
+      where e.olympic_id = 'ATH2004' and
+            r.medal = 'GOLD'
+      group by e.name
+     ) as gold_medalers;
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+Demonstrative excerpt of output:
+
+<medal>
+  <event>200m Freestyle Men</event>
+  <players>
+    <player>Ian Thorpe</player>
+  </players>
+</medal>
+<medal>
+  <event>200m Men</event>
+  <players>
+    <player>Shawn Crawford</player>
+  </players>
+</medal>
+<medal>
+  <event>4x200m Freestyle Relay Men</event>
+  <players>
+    <player>Klete Keller</player>
+    <player>Michael Phelps</player>
+    <player>Peter Vanderkaay</player>
+    <player>Ryan Lochte</player>
+    <player>Scott Goldblatt</player>
+  </players>
+</medal>
 =============================================================================================
 
