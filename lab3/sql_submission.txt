@@ -1,25 +1,86 @@
 SQL Assignment Submission
 
 === 1
-<INSERT YOUR QUERY HERE>
+create view numberofmedals as
+       (select c.name as country_name,
+               (count(i.medal) + count(t.medal)) as number_of_medals
+        from countries c
+             left outer join
+             teammedals t on t.country_id = c.country_id
+             left outer join
+             individualmedals i on i.country_id = c.country_id
+        group by c.name);
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+CREATE VIEW
 =============================================================================================
 
 === 2
-<INSERT YOUR QUERY HERE>
+a) select r.a, r.b, s.c, s.d
+   from r inner join s
+        on r.c = s.c or r.c is null and s.c is null;
+
+b) select r.a, r.b, s.c, s.d
+   from r inner join s on r.c = s.c
+   union
+   select r.a, r.b, null, null
+   from r inner join s on r.c is null and s.c is null
+   union
+   select null, null, s.c, s.d
+   from r inner join s on r.c is null and s.c is null
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+a)      a      | b  | c  |     d      
+   ------------+----+----+------------
+    a3         | 30 | 30 | d1        
+    a4         |  0 |    | d2        
+   (2 rows)
+
+b)      a      | b  | c  |     d      
+   ------------+----+----+------------
+    a3         | 30 | 30 | d1        
+               |    |    | d2        
+    a4         |  0 |    | 
+   (3 rows)
 =============================================================================================
 
 === 3
-<INSERT YOUR QUERY HERE>
+create or replace function insert_row() returns trigger as
+$body$
+begin
+  if right(new.event_id, 2) in
+     (00,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)
+  then
+    insert into teammedals
+    select distinct c.country_id,
+           r.event_id,
+           r.medal,
+           r.result
+    from results r inner join
+         events e on r.event_id = e.event_id inner join
+         players p on r.player_id = p.player_id inner join
+         countries c on c.country_id = p.country_id
+    where e.event_id = new.event_id;
+  end if;
+  return new;
+end;
+$body$
+language plpgsql;
+
+create trigger update_teammedals
+       after insert on results
+       for each row
+       execute procedure insert_row();
 **************** RESULT ***************************************************************
-<INSERT YOUR RESULT HERE>
+CREATE FUNCTION
+CREATE TRIGGER
 =============================================================================================
 
 === 4
-<INSERT YOUR QUERY HERE>
+select query_to_xml('select e.event_id, r.player_id
+from events e inner join
+     results r on e.event_id = r.event_id inner join
+     players p on r.player_id = p.player_id
+where e.olympic_id = ''ATH2004'' and
+      r.medal = ''GOLD'' and is_team_event=1', false, true, '')
 **************** RESULT ***************************************************************
 <INSERT YOUR RESULT HERE>
 =============================================================================================
