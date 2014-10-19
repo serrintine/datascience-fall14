@@ -186,7 +186,9 @@ w.apply_to_file(sys.argv[1]).print_csv(sys.argv[2])
 
 
 =========== Data Wrangler Script: World Cup 2
-
+Data wrangler keeps crashing before I can finish World Cup 1.
+I have given up on moving forward with it. This is not even
+remotely close to a competent tool for cleaning up data.
 
 =========== UNIX Tools Command: CMSC
 
