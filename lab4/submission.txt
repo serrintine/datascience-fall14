@@ -1,9 +1,188 @@
 Lab 4 Submission
 
 =========== Data Wrangler Script: CMSC
+from wrangler import dw
+import sys
+
+if(len(sys.argv) < 3):
+	sys.exit('Error: Please include an input and output file.  Example python script.py input.csv output.csv')
+
+w = dw.DataWrangler()
+
+# Split data repeatedly on newline  into  rows
+w.add(dw.Split(column=["data"],
+               table=0,
+               status="active",
+               drop=True,
+               result="row",
+               update=False,
+               insert_position="right",
+               row=None,
+               on="\n",
+               before=None,
+               after=None,
+               ignore_between=None,
+               which=1,
+               max=0,
+               positions=None,
+               quote_character=None))
+
+# Wrap  rows where data starts with 'CMSC'
+w.add(dw.Wrap(column=[],
+              table=0,
+              status="active",
+              drop=False,
+              row=dw.Row(column=[],
+             table=0,
+             status="active",
+             drop=False,
+             conditions=[dw.StartsWith(column=[],
+                    table=0,
+                    status="active",
+                    drop=False,
+                    lcol="data",
+                    value="CMSC",
+                    op_str="starts with")])))
+
+w.apply_to_file(sys.argv[1]).print_csv(sys.argv[2])
+
 
 
 =========== Data Wrangler Script: World Cup 1
+from wrangler import dw
+import sys
+
+if(len(sys.argv) < 3):
+	sys.exit('Error: Please include an input and output file.  Example python script.py input.csv output.csv')
+
+w = dw.DataWrangler()
+
+# Split data repeatedly on newline  into  rows
+w.add(dw.Split(column=["data"],
+               table=0,
+               status="active",
+               drop=True,
+               result="row",
+               update=False,
+               insert_position="right",
+               row=None,
+               on="\n",
+               before=None,
+               after=None,
+               ignore_between=None,
+               which=1,
+               max=0,
+               positions=None,
+               quote_character=None))
+
+# Wrap  rows where data = '|-'
+w.add(dw.Wrap(column=[],
+              table=0,
+              status="active",
+              drop=False,
+              row=dw.Row(column=[],
+             table=0,
+             status="active",
+             drop=False,
+             conditions=[dw.Eq(column=[],
+            table=0,
+            status="active",
+            drop=False,
+            lcol="data",
+            value="|-",
+            op_str="=")])))
+
+# Drop wrap
+w.add(dw.Drop(column=["wrap"],
+              table=0,
+              status="active",
+              drop=True))
+
+# Delete row 1
+w.add(dw.Filter(column=[],
+                table=0,
+                status="active",
+                drop=False,
+                row=dw.Row(column=[],
+             table=0,
+             status="active",
+             drop=False,
+             conditions=[dw.RowIndex(column=[],
+                  table=0,
+                  status="active",
+                  drop=False,
+                  indices=[0])])))
+
+# Cut from wrap1 before ' any word }'
+w.add(dw.Cut(column=["wrap1"],
+             table=0,
+             status="active",
+             drop=False,
+             result="column",
+             update=True,
+             insert_position="right",
+             row=None,
+             on=".*",
+             before="[a-zA-Z]+}",
+             after=None,
+             ignore_between=None,
+             which=1,
+             max=1,
+             positions=None))
+
+# Cut from wrap1 after ' any uppercase word '
+w.add(dw.Cut(column=["wrap1"],
+             table=0,
+             status="active",
+             drop=False,
+             result="column",
+             update=True,
+             insert_position="right",
+             row=None,
+             on=".*",
+             before=None,
+             after="[A-Z]+",
+             ignore_between=None,
+             which=1,
+             max=1,
+             positions=None))
+
+# Extract from wrap2 between '[\[' and ' FIFA'
+w.add(dw.Extract(column=["wrap2"],
+                 table=0,
+                 status="active",
+                 drop=False,
+                 result="column",
+                 update=False,
+                 insert_position="right",
+                 row=None,
+                 on=".*",
+                 before=" FIFA",
+                 after="\\[\\[",
+                 ignore_between=None,
+                 which=1,
+                 max=1,
+                 positions=None))
+
+# Extract from wrap2 between ' [\[' and ' FIFA'
+w.add(dw.Extract(column=["wrap2"],
+                 table=0,
+                 status="active",
+                 drop=False,
+                 result="column",
+                 update=False,
+                 insert_position="right",
+                 row=None,
+                 on=".*",
+                 before=" FIFA",
+                 after=" \\[\\[",
+                 ignore_between=None,
+                 which=1,
+                 max=1,
+                 positions=None))
+
+w.apply_to_file(sys.argv[1]).print_csv(sys.argv[2])
+
 
 
 =========== Data Wrangler Script: World Cup 2

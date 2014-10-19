@@ -126,16 +126,17 @@ from (select xmlelement(name event, trim(e.name)) as event_name,
            results r on e.event_id = r.event_id inner join
            players p on r.player_id = p.player_id
       where e.olympic_id = 'ATH2004' and
-            r.medal = 'GOLD'
+            r.medal = 'GOLD' and
+            p.country_id = 'USA'
       group by e.name
      ) as gold_medalers;
 **************** RESULT ***************************************************************
 Demonstrative excerpt of output:
 
 <medal>
-  <event>200m Freestyle Men</event>
+  <event>100m Butterfly Men</event>
   <players>
-    <player>Ian Thorpe</player>
+    <player>Michael Phelps</player>
   </players>
 </medal>
 <medal>
@@ -147,10 +148,10 @@ Demonstrative excerpt of output:
 <medal>
   <event>4x200m Freestyle Relay Men</event>
   <players>
-    <player>Klete Keller</player>
-    <player>Michael Phelps</player>
     <player>Peter Vanderkaay</player>
+    <player>Michael Phelps</player>
     <player>Ryan Lochte</player>
+    <player>Klete Keller</player>
     <player>Scott Goldblatt</player>
   </players>
 </medal>
