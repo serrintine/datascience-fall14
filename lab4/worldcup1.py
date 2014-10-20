@@ -1,8 +1,7 @@
 import re
 
 f = open("worldcup.txt","r")
-
-print("Country, Year, Placement")
+print("Country, Year, Title")
 f.readline()
 line = f.readline().strip()
 while line!="|}":
