@@ -8,6 +8,7 @@ while line != '':
         out = []
         out.append(course)
         out.append(line)
+        # out.append('"' + f.readline().strip() + '"')
         out.append(f.readline().strip())
         line = f.readline().strip().split(": ")
         out.append(line[1].split(",")[0])
