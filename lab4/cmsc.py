@@ -1,5 +1,6 @@
 f = open("cmsc.txt","r")
 
+print("Course No., Section No., Instructor, Seats, Open, Waitlist, Days, Time, Bldg., Room No.")
 line = f.readline().strip()
 while line != '':
     course = line
