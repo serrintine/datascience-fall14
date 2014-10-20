@@ -2,10 +2,11 @@ f = open("cmsc.txt","r")
 
 line = f.readline().strip()
 while line != '':
-    out = []
-    out.append(line)
+    course = line
     line = f.readline().strip()
     while line != '':
+        out = []
+        out.append(course)
         out.append(line)
         out.append(f.readline().strip())
         line = f.readline().strip().split(": ")
