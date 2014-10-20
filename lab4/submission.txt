@@ -191,10 +191,18 @@ I have given up on moving forward with it. This is not even
 remotely close to a competent tool for cleaning up data.
 
 =========== UNIX Tools Command: CMSC
+cat cmsc.txt | sed '/^$/d; s/[()]//g; s/[[:space:]]*$//' | awk '/^([A-Z]{3,3}|([M|W|F|TuTh]+ ))/ {print $1", "$2, $3, $4} !/^([A-Z]{3,3}|([M|W|F|TuTh]+ ))/ {print $0}' | awk '/^CMSC/ {class = $1} /^[0-9]+$/ {print class, $0} !/(^CMSC|^[0-9]+$|^Seats)/ {print $0} /^Seats/ {print $3, $5, $7}' | awk -F', ' 'BEGIN {printf "Course No., Section No., Instructor, Seats, Open, Waitlist, Days, Time, Bldg., Room No."} /^CMSC/ {print concat; concat = $0} !/^CMSC/ {concat = concat", "$0;} END {print concat}'
 
 
 =========== UNIX Tools Command: World Cup 1
-
+cat worldcup.txt | tail -n +3 | sed 's/|align=center|{{sort dash}}//g; s/||{{sort dash}}//g; s/|-//g; s/|style="background:#fff68f"//g; s/!.*finishes//g; s/|style=white-space:nowrap//g; s/<.*sup>//g; s/\[\[#1|\*\]\]//g; s/GER[[#2|^]]//g; s/|.$//g; s/|[[:digit:]]|//g; s/[[:digit:]]* FIFA World Cup|//g; s/\[\[#2\|\^\]\]//g; s/|11|//g; s/|13||12|//g; s/\|{{fb\|//g; s/|[0-9]//g; s/|//g; s/}//g; s/[()]//g; s/, /,/g; s/ //g; /^$/d;' | tr -d "[]" | awk '
+        /^[A-Z]/ {team = $1}
+        !/^[[A-Z]/ {print team; split($0,a,","); 
+        for (i=1; i<=5; i++) {
+                if (a[i] != 0) 
+                        printf("%d, %d\n", a[i], (NR-1)%5)
+        }
+        }' | awk '/^[A-Z]/ {team = $1} /^[1-9]/ {print team", "$0}'
 
 =========== Python Script: CMSC
 
