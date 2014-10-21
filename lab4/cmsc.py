@@ -1,19 +1,19 @@
-f = open("cmsc.txt","r")
-print("Course No., Section No., Instructor, Seats, Open, Waitlist, Days, Time, Bldg., Room No.")
+f = open('cmsc.txt','r')
+print('Course No., Section No., Instructor, Seats, Open, Waitlist, Days, Time, Bldg., Room No.')
 line = f.readline().strip()
-while line != '':
+while line:
     course = line
     line = f.readline().strip()
-    while line != '':
+    while line:
         out = []
         out.append(course)
         out.append(line)
         # out.append('"' + f.readline().strip() + '"')
         out.append(f.readline().strip())
-        line = f.readline().strip().split(": ")
-        out.append(line[1].split(",")[0])
-        out.append(line[2].split(",")[0])
-        out.append(line[3].split(")")[0])
+        line = f.readline().strip().split(': ')
+        out.append(line[1].split(',')[0])
+        out.append(line[2].split(',')[0])
+        out.append(line[3].split(')')[0])
         line = f.readline().strip().split()
         out.append(line[0])
         out.append(' '.join(line[1:]))
