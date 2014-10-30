@@ -42,13 +42,20 @@ training_file = 'products_training.json'
 # Dedupe can take custom field comparison functions
 # Here you need to define any custom comparison functions you may use for different fields
 
-def customComparator(field_1, field_2) :
-    if field_1 and field_2 :
-        if field_1 == field_2 :
+def customComparator(field_1, field_2):
+    if field_1 and field_2:
+        p1 = field_1.strip().split()
+        p2 = field_2.strip().split()
+    
+        # Convert GBP to USD
+        price_1 = (float(p1[0])*1.6 if len(p1) == 2 else float(p1[0]))
+        price_2 = (float(p2[0])*1.6 if len(p2) == 2 else float(p2[0]))
+        
+        if abs(price_1 - price_2) < 0.2*max(price_1, price_2):
             return 1
         else:
             return 0
-    else :
+    else:
         return nan
 
 def preProcess(column):
@@ -96,7 +103,8 @@ else:
     # to be used and specify any customComparators. Please read the dedupe manual for details
     fields = [
         {'field' : 'title', 'type': 'String'},
-        {'field' : 'price', 'type': 'Custom', 'has missing':True, 'comparator' : customComparator}
+        {'field' : 'price', 'type': 'Custom', 'has missing':True, 'comparator' : customComparator},
+        {'field' : 'manufacturer', 'type': 'String', 'has missing':True}
         ]
 
     # Create a new deduper object and pass our data model to it.

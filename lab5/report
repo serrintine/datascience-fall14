@@ -1,0 +1,35 @@
+=========================
+How to run scripts
+=========================
+The scripts can just be run on command line.
+I ran them as follows:
+
+~/$ python 2.1.py > 2.1.out
+
+~/$ python 2.2.py > 2.2.out
+
+~/$ python product_dedup.py
+
+~/$ python dedup_evaluation.py
+
+
+=========================
+Dedupe report
+=========================
+One set of output from dedup_evaluation.py:
+Precision: 0.529220779221
+Recall: 0.125384615385
+
+I used the title, price, and manufacturer fields for detecting duplicates.
+I kept the default String comparator for title and manufacturer, and
+modified the custom comparator for price to consider duplicates to be within
+a 20% price difference. I also converted GBP to USD for more accurate
+comparisons. The trade off between precision and recall was not changed.
+Depending on the training set, my solution achieves varying levels of
+precision and recall. I observed 44%, 28%, and 53% precision, along with
+18%, 16%, and 12.5% recall, respectively.
+
+I would improve my solution by adding custom comparators for title and
+manufacturer, perhaps using the jellyfish library's levenshtein_distance
+function. I could also add the product description field and compare the
+first 10 words.
