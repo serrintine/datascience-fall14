@@ -13,11 +13,9 @@ import org.apache.hadoop.util.*;
 public class Rank {
 
   public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, Text> {
-    private final static IntWritable one = new IntWritable(1);
     private Text bigram = new Text();
     private Text word1 = new Text();
     private Text word2 = new Text();
-    private int count;
       
     public void map(LongWritable key, Text value, OutputCollector output, Reporter reporter)
     throws IOException {
@@ -28,8 +26,7 @@ public class Rank {
         String[] words = line.split("\\s+");
         word1.set(words[0]);
         word2.set(words[1]);
-        count = Integer.parseInt(words[2]);
-        bigram.set(word1 + " " + word2 + " " + count);
+        bigram.set(word1 + " " + word2 + " " + words[2]);
 
         output.collect(word1, bigram);
         output.collect(word2, bigram);

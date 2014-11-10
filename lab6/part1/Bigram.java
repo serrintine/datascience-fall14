@@ -27,7 +27,7 @@ public class Bigram {
 
       while (tokenizer.hasMoreTokens()) {
         word2.set(tokenizer.nextToken());
-        bigram.set(word1.toString() + " " + word2.toString());
+        bigram.set(word1 + " " + word2);
         output.collect(bigram, one);
         word1.set(word2);
       }
