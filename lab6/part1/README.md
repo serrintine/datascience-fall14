@@ -17,6 +17,6 @@ chmod 755 ./clean.sh
 
 ###Ouput
 
-Output of `Bigram.java` is in the file `bigram.txt`.
+Output of `Bigram.java` is in the file `bigram.txt`
 
-Output of `Rank.java` is in the file `rank.txt`.
+Output of `Rank.java` is in the file `rank.txt`
