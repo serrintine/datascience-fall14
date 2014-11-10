@@ -26,7 +26,7 @@ public class Rank {
         String[] words = line.split("\\s+");
         word1.set(words[0]);
         word2.set(words[1]);
-        bigram.set(word1 + " " + word2 + " " + words[2]);
+        bigram.set(line);
 
         output.collect(word1, bigram);
         output.collect(word2, bigram);
