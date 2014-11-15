@@ -1,24 +1,919 @@
+===================== Cassandra: Modified Schema
+CREATE KEYSPACE ctr
+WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+
+USE ctr;
+
+CREATE TABLE clickimpression (
+    OwnerId int,
+    AdId int,
+    numClicks int,
+    numImpressions int,
+    PRIMARY KEY (OwnerId, AdId)
+);
+
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (1,1,1,10);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (1,2,0,5);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (1,3,1,20);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (1,4,0,15);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (2,1,0,10);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (2,2,0,55);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (2,3,0,13);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (2,4,0,21);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (3,1,1,32);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (3,2,0,23);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (3,3,2,44);
+INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions) VALUES (3,4,1,36);
+
+
 ===================== Cassandra: CQL Queries and Results
+1) SELECT * FROM clickimpression WHERE OwnerId = 1 AND AdId = 3;
+
+    ownerid | adid | numclicks | numimpressions
+   ---------+------+-----------+----------------
+          1 |    3 |         1 |             20
+
+   (1 rows)
 
 
+2) SELECT * FROM clickimpression WHERE OwnerId = 2;
 
+    ownerid | adid | numclicks | numimpressions
+   ---------+------+-----------+----------------
+          2 |    1 |         0 |             10
+          2 |    2 |         0 |             55
+          2 |    3 |         0 |             13
+          2 |    4 |         0 |             21
+
+   (4 rows)
 
 
 ===================== Cassandra: Python Code
+#!/usr/bin/env python
 
+from cassandra import ConsistencyLevel
+from cassandra.cluster import Cluster
+from cassandra.query import SimpleStatement
 
+KEYSPACE = "python_ctr"
 
+def main():
+    cluster = Cluster(['127.0.0.1'])
+    session = cluster.connect()
+
+    session.execute("""
+        CREATE KEYSPACE IF NOT EXISTS %s
+        WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '2' }
+        """ % KEYSPACE)
+
+    session.set_keyspace(KEYSPACE)
+
+    session.execute("""
+        CREATE TABLE IF NOT EXISTS clickimpression (
+            OwnerId int,
+            AdId int,
+            numClicks int,
+            numImpressions int,
+            PRIMARY KEY (OwnerId, AdId)
+        )
+        """)
+
+    query = SimpleStatement("""
+        INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions)
+        VALUES (%(oi)s, %(ai)s, %(nc)s, %(ni)s)
+        """, consistency_level=ConsistencyLevel.ONE)
+
+    prepared = session.prepare("""
+        INSERT INTO clickimpression (OwnerId, AdId, numClicks, numImpressions)
+        VALUES (?, ?, ?, ?)
+        """)
+        
+    vals = [[1,1,1,10], [1,2,0,5], [1,3,1,20], [1,4,0,15],
+            [2,1,0,10], [2,2,0,55], [2,3,0,13], [2,4,0,21],
+            [3,1,1,32], [3,2,0,23], [3,3,2,44], [3,4,1,36]]
+    for row in vals:
+        session.execute(query, dict(oi=row[0], ai=row[1], nc=row[2], ni=row[3]))
+        session.execute(prepared, (row[0], row[1], row[2], row[3]))
+
+    future = session.execute_async("SELECT * FROM clickimpression")
+    rows = future.result()
+
+    print "Find the ctr for each OwnerId, AdId pair:"
+    print "OwnerId\tAdId\tCTR"
+    for row in rows:
+        print str(row[0]) + "\t" + str(row[1]) + "\t" + str(row[2]/float(row[3]))
+        
+    print "\nCompute the ctr for each OwnerId:"
+    print "OwnerId\tCTR"
+    clicks = {}
+    impressions = {}
+    for row in rows:
+        if row[0] in clicks:
+            clicks[row[0]] += row[2]
+        else:
+            clicks[row[0]] = row[2]
+        if row[0] in impressions:
+            impressions[row[0]] += row[3]
+        else:
+            impressions[row[0]] = row[3]
+    for owner in clicks:
+        print str(owner) + "\t" + str(clicks[owner]/float(impressions[owner]))
+        
+    future = session.execute_async("SELECT * FROM clickimpression WHERE OwnerId = 1 AND AdId = 3")
+    rows = future.result()
+            
+    print "\nCompute the ctr for OwnerId = 1, AdId = 3:"
+    print "OwnerId\tAdId\tCTR"
+    for row in rows:
+        print str(row[0]) + "\t" + str(row[1]) + "\t" + str(row[2]/float(row[3]))
+        
+    future = session.execute_async("SELECT * FROM clickimpression WHERE OwnerId = 2")
+    rows = future.result()
+    
+    print "\nCompute the ctr for OwnerId = 2:"
+    print "OwnerId\tCTR"
+    clicks = 0;
+    impressions = 0;
+    for row in rows:
+        clicks += row[2]
+        impressions += row[3]
+    print str(rows[0][0]) + "\t" + str(clicks/float(impressions))
+    
+    session.execute("DROP KEYSPACE " + KEYSPACE)
+
+if __name__ == "__main__":
+    main()
 
 
 ===================== Cassandra: Output of Running the Python Code
+Find the ctr for each OwnerId, AdId pair:
+OwnerId    AdId    CTR
+1          1       0.1
+1          2       0.0
+1          3       0.05
+1          4       0.0
+2          1       0.0
+2          2       0.0
+2          3       0.0
+2          4       0.0
+3          1       0.03125
+3          2       0.0
+3          3       0.0454545454545
+3          4       0.0277777777778
 
+Compute the ctr for each OwnerId:
+OwnerId    CTR
+1          0.04
+2          0.0
+3          0.0296296296296
 
+Compute the ctr for OwnerId = 1, AdId = 3:
+OwnerId    AdId    CTR
+1          3       0.05
 
-
+Compute the ctr for OwnerId = 2:
+OwnerId    CTR
+2          0.0
 
 
 ===================== MongoDB Queries and Outputs
+mongoimport --db test --collection zipcodes --file zipData.json
 
+db.zipcodes.insert({ "_id" : "99950",
+                     "city" : "KETCHIKAN",
+                     "loc" : [ -133.18479, 55.942471 ],
+                     "pop" : 422,
+                     "state" : "AK" })
 
+1) db.zipcodes.find( { pop: { $lt: 5000000 } }, { state: 1, city: 1, _id: 0 } )
+   { "city" : "AGAWAM", "state" : "MA" }
+   { "city" : "CUSHMAN", "state" : "MA" }
+   { "city" : "BARRE", "state" : "MA" }
+   { "city" : "BELCHERTOWN", "state" : "MA" }
+   { "city" : "BLANDFORD", "state" : "MA" }
+   { "city" : "BRIMFIELD", "state" : "MA" }
+   { "city" : "CHESTER", "state" : "MA" }
+   { "city" : "CHESTERFIELD", "state" : "MA" }
+   { "city" : "CHICOPEE", "state" : "MA" }
+   { "city" : "CHICOPEE", "state" : "MA" }
+   { "city" : "WESTOVER AFB", "state" : "MA" }
+   { "city" : "CUMMINGTON", "state" : "MA" }
+   { "city" : "MOUNT TOM", "state" : "MA" }
+   { "city" : "EAST LONGMEADOW", "state" : "MA" }
+   { "city" : "FEEDING HILLS", "state" : "MA" }
+   { "city" : "GILBERTVILLE", "state" : "MA" }
+   { "city" : "GOSHEN", "state" : "MA" }
+   { "city" : "GRANBY", "state" : "MA" }
+   { "city" : "TOLLAND", "state" : "MA" }
+   { "city" : "HADLEY", "state" : "MA" }
+   Type "it" for more
 
+2) db.zipcodes.aggregate({
+       $group : {
+           _id : "$state",
+           totalPop : { $sum : "$pop" }
+       }}, {
+       $sort : {
+           totalPop : -1 
+       }
+   })
+{
+    "result" : [
+        {
+            "_id" : "CA",
+            "totalPop" : 29754890
+        },
+        {
+            "_id" : "NY",
+            "totalPop" : 17990402
+        },
+        {
+            "_id" : "TX",
+            "totalPop" : 16984601
+        },
+        {
+            "_id" : "FL",
+            "totalPop" : 12686644
+        },
+        {
+            "_id" : "PA",
+            "totalPop" : 11881643
+        },
+        {
+            "_id" : "IL",
+            "totalPop" : 11427576
+        },
+        {
+            "_id" : "OH",
+            "totalPop" : 10846517
+        },
+        {
+            "_id" : "MI",
+            "totalPop" : 9295297
+        },
+        {
+            "_id" : "NJ",
+            "totalPop" : 7730188
+        },
+        {
+            "_id" : "NC",
+            "totalPop" : 6628637
+        },
+        {
+            "_id" : "GA",
+            "totalPop" : 6478216
+        },
+        {
+            "_id" : "VA",
+            "totalPop" : 6181479
+        },
+        {
+            "_id" : "MA",
+            "totalPop" : 6016425
+        },
+        {
+            "_id" : "IN",
+            "totalPop" : 5544136
+        },
+        {
+            "_id" : "MO",
+            "totalPop" : 5110648
+        },
+        {
+            "_id" : "WI",
+            "totalPop" : 4891769
+        },
+        {
+            "_id" : "TN",
+            "totalPop" : 4876457
+        },
+        {
+            "_id" : "WA",
+            "totalPop" : 4866692
+        },
+        {
+            "_id" : "MD",
+            "totalPop" : 4781379
+        },
+        {
+            "_id" : "MN",
+            "totalPop" : 4372982
+        },
+        {
+            "_id" : "LA",
+            "totalPop" : 4217595
+        },
+        {
+            "_id" : "AL",
+            "totalPop" : 4040587
+        },
+        {
+            "_id" : "KY",
+            "totalPop" : 3675484
+        },
+        {
+            "_id" : "AZ",
+            "totalPop" : 3665228
+        },
+        {
+            "_id" : "SC",
+            "totalPop" : 3486703
+        },
+        {
+            "_id" : "CO",
+            "totalPop" : 3293755
+        },
+        {
+            "_id" : "CT",
+            "totalPop" : 3287116
+        },
+        {
+            "_id" : "OK",
+            "totalPop" : 3145585
+        },
+        {
+            "_id" : "OR",
+            "totalPop" : 2842321
+        },
+        {
+            "_id" : "IA",
+            "totalPop" : 2776420
+        },
+        {
+            "_id" : "MS",
+            "totalPop" : 2573216
+        },
+        {
+            "_id" : "KS",
+            "totalPop" : 2475285
+        },
+        {
+            "_id" : "AR",
+            "totalPop" : 2350725
+        },
+        {
+            "_id" : "WV",
+            "totalPop" : 1793146
+        },
+        {
+            "_id" : "UT",
+            "totalPop" : 1722850
+        },
+        {
+            "_id" : "NE",
+            "totalPop" : 1578139
+        },
+        {
+            "_id" : "NM",
+            "totalPop" : 1515069
+        },
+        {
+            "_id" : "ME",
+            "totalPop" : 1226648
+        },
+        {
+            "_id" : "NV",
+            "totalPop" : 1201833
+        },
+        {
+            "_id" : "NH",
+            "totalPop" : 1109252
+        },
+        {
+            "_id" : "HI",
+            "totalPop" : 1108229
+        },
+        {
+            "_id" : "ID",
+            "totalPop" : 1006749
+        },
+        {
+            "_id" : "RI",
+            "totalPop" : 1003218
+        },
+        {
+            "_id" : "MT",
+            "totalPop" : 798948
+        },
+        {
+            "_id" : "SD",
+            "totalPop" : 695397
+        },
+        {
+            "_id" : "DE",
+            "totalPop" : 666168
+        },
+        {
+            "_id" : "ND",
+            "totalPop" : 638272
+        },
+        {
+            "_id" : "DC",
+            "totalPop" : 606900
+        },
+        {
+            "_id" : "VT",
+            "totalPop" : 562758
+        },
+        {
+            "_id" : "AK",
+            "totalPop" : 544698
+        },
+        {
+            "_id" : "WY",
+            "totalPop" : 453528
+        }
+    ],
+    "ok" : 1
+}
+> db.zipcodes.aggregate({
+...        $group : {
+...            _id : "$state",
+...            totalPop : { $sum : "$pop" }
+...        }}, {
+...        $sort : {
+...            totalPop : -1 
+...        }
+...    })
+{
+    "result" : [
+        {
+            "_id" : "CA",
+            "totalPop" : 29754890
+        },
+        {
+            "_id" : "NY",
+            "totalPop" : 17990402
+        },
+        {
+            "_id" : "TX",
+            "totalPop" : 16984601
+        },
+        {
+            "_id" : "FL",
+            "totalPop" : 12686644
+        },
+        {
+            "_id" : "PA",
+            "totalPop" : 11881643
+        },
+        {
+            "_id" : "IL",
+            "totalPop" : 11427576
+        },
+        {
+            "_id" : "OH",
+            "totalPop" : 10846517
+        },
+        {
+            "_id" : "MI",
+            "totalPop" : 9295297
+        },
+        {
+            "_id" : "NJ",
+            "totalPop" : 7730188
+        },
+        {
+            "_id" : "NC",
+            "totalPop" : 6628637
+        },
+        {
+            "_id" : "GA",
+            "totalPop" : 6478216
+        },
+        {
+            "_id" : "VA",
+            "totalPop" : 6181479
+        },
+        {
+            "_id" : "MA",
+            "totalPop" : 6016425
+        },
+        {
+            "_id" : "IN",
+            "totalPop" : 5544136
+        },
+        {
+            "_id" : "MO",
+            "totalPop" : 5110648
+        },
+        {
+            "_id" : "WI",
+            "totalPop" : 4891769
+        },
+        {
+            "_id" : "TN",
+            "totalPop" : 4876457
+        },
+        {
+            "_id" : "WA",
+            "totalPop" : 4866692
+        },
+        {
+            "_id" : "MD",
+            "totalPop" : 4781379
+        },
+        {
+            "_id" : "MN",
+            "totalPop" : 4372982
+        },
+        {
+            "_id" : "LA",
+            "totalPop" : 4217595
+        },
+        {
+            "_id" : "AL",
+            "totalPop" : 4040587
+        },
+        {
+            "_id" : "KY",
+            "totalPop" : 3675484
+        },
+        {
+            "_id" : "AZ",
+            "totalPop" : 3665228
+        },
+        {
+            "_id" : "SC",
+            "totalPop" : 3486703
+        },
+        {
+            "_id" : "CO",
+            "totalPop" : 3293755
+        },
+        {
+            "_id" : "CT",
+            "totalPop" : 3287116
+        },
+        {
+            "_id" : "OK",
+            "totalPop" : 3145585
+        },
+        {
+            "_id" : "OR",
+            "totalPop" : 2842321
+        },
+        {
+            "_id" : "IA",
+            "totalPop" : 2776420
+        },
+        {
+            "_id" : "MS",
+            "totalPop" : 2573216
+        },
+        {
+            "_id" : "KS",
+            "totalPop" : 2475285
+        },
+        {
+            "_id" : "AR",
+            "totalPop" : 2350725
+        },
+        {
+            "_id" : "WV",
+            "totalPop" : 1793146
+        },
+        {
+            "_id" : "UT",
+            "totalPop" : 1722850
+        },
+        {
+            "_id" : "NE",
+            "totalPop" : 1578139
+        },
+        {
+            "_id" : "NM",
+            "totalPop" : 1515069
+        },
+        {
+            "_id" : "ME",
+            "totalPop" : 1226648
+        },
+        {
+            "_id" : "NV",
+            "totalPop" : 1201833
+        },
+        {
+            "_id" : "NH",
+            "totalPop" : 1109252
+        },
+        {
+            "_id" : "HI",
+            "totalPop" : 1108229
+        },
+        {
+            "_id" : "ID",
+            "totalPop" : 1006749
+        },
+        {
+            "_id" : "RI",
+            "totalPop" : 1003218
+        },
+        {
+            "_id" : "MT",
+            "totalPop" : 798948
+        },
+        {
+            "_id" : "SD",
+            "totalPop" : 695397
+        },
+        {
+            "_id" : "DE",
+            "totalPop" : 666168
+        },
+        {
+            "_id" : "ND",
+            "totalPop" : 638272
+        },
+        {
+            "_id" : "DC",
+            "totalPop" : 606900
+        },
+        {
+            "_id" : "VT",
+            "totalPop" : 562758
+        },
+        {
+            "_id" : "AK",
+            "totalPop" : 544698
+        },
+        {
+            "_id" : "WY",
+            "totalPop" : 453528
+        }
+    ],
+    "ok" : 1
+}
 
+3) db.zipcodes.aggregate(
+       { $group: {
+           _id: { state: "$state", city: "$city" },
+           pop: { $sum: "$pop" }
+       }},
+       { $sort: { pop: 1 } },
+       { $group: {
+           _id : "$_id.state",
+           smallestCity: { $first: "$_id.city" },
+           smallestPop:  { $first: "$pop" }
+       }
+   })
+{
+    "result" : [
+        {
+            "_id" : "DE",
+            "smallestCity" : "BETHEL",
+            "smallestPop" : 108
+        },
+        {
+            "_id" : "MO",
+            "smallestCity" : "BENDAVIS",
+            "smallestPop" : 44
+        },
+        {
+            "_id" : "IL",
+            "smallestCity" : "ANCONA",
+            "smallestPop" : 38
+        },
+        {
+            "_id" : "OH",
+            "smallestCity" : "ISLE SAINT GEORG",
+            "smallestPop" : 38
+        },
+        {
+            "_id" : "NH",
+            "smallestCity" : "WEST NOTTINGHAM",
+            "smallestPop" : 27
+        },
+        {
+            "_id" : "DC",
+            "smallestCity" : "PENTAGON",
+            "smallestPop" : 21
+        },
+        {
+            "_id" : "ND",
+            "smallestCity" : "TROTTERS",
+            "smallestPop" : 12
+        },
+        {
+            "_id" : "MD",
+            "smallestCity" : "ANNAPOLIS JUNCTI",
+            "smallestPop" : 32
+        },
+        {
+            "_id" : "MN",
+            "smallestCity" : "JOHNSON",
+            "smallestPop" : 12
+        },
+        {
+            "_id" : "UT",
+            "smallestCity" : "MODENA",
+            "smallestPop" : 9
+        },
+        {
+            "_id" : "WY",
+            "smallestCity" : "LOST SPRINGS",
+            "smallestPop" : 6
+        },
+        {
+            "_id" : "AZ",
+            "smallestCity" : "HUALAPAI",
+            "smallestPop" : 2
+        },
+        {
+            "_id" : "CT",
+            "smallestCity" : "EAST KILLINGLY",
+            "smallestPop" : 25
+        },
+        {
+            "_id" : "WA",
+            "smallestCity" : "BENGE",
+            "smallestPop" : 2
+        },
+        {
+            "_id" : "AL",
+            "smallestCity" : "ALLEN",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "NV",
+            "smallestCity" : "TUSCARORA",
+            "smallestPop" : 1
+        },
+        {
+            "_id" : "NE",
+            "smallestCity" : "LAKESIDE",
+            "smallestPop" : 5
+        },
+        {
+            "_id" : "FL",
+            "smallestCity" : "CECIL FIELD NAS",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "SD",
+            "smallestCity" : "ZEONA",
+            "smallestPop" : 8
+        },
+        {
+            "_id" : "TX",
+            "smallestCity" : "FULTON",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "WI",
+            "smallestCity" : "CLAM LAKE",
+            "smallestPop" : 2
+        },
+        {
+            "_id" : "MS",
+            "smallestCity" : "CHUNKY",
+            "smallestPop" : 79
+        },
+        {
+            "_id" : "IA",
+            "smallestCity" : "DOUDS",
+            "smallestPop" : 15
+        },
+        {
+            "_id" : "HI",
+            "smallestCity" : "NINOLE",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "NC",
+            "smallestCity" : "GLOUCESTER",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "MT",
+            "smallestCity" : "MOSBY",
+            "smallestPop" : 7
+        },
+        {
+            "_id" : "OK",
+            "smallestCity" : "SOUTHARD",
+            "smallestPop" : 8
+        },
+        {
+            "_id" : "ID",
+            "smallestCity" : "KEUTERVILLE",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "IN",
+            "smallestCity" : "WESTPOINT",
+            "smallestPop" : 145
+        },
+        {
+            "_id" : "KY",
+            "smallestCity" : "BROWDER",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "VT",
+            "smallestCity" : "UNIV OF VERMONT",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "PA",
+            "smallestCity" : "HAMILTON",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "LA",
+            "smallestCity" : "FORDOCHE",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "SC",
+            "smallestCity" : "QUINBY",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "KS",
+            "smallestCity" : "ARNOLD",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "NJ",
+            "smallestCity" : "IMLAYSTOWN",
+            "smallestPop" : 17
+        },
+        {
+            "_id" : "WV",
+            "smallestCity" : "MOUNT CARBON",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "TN",
+            "smallestCity" : "ALLRED",
+            "smallestPop" : 2
+        },
+        {
+            "_id" : "VA",
+            "smallestCity" : "WALLOPS ISLAND",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "AK",
+            "smallestCity" : "CHEVAK",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "NY",
+            "smallestCity" : "RAQUETTE LAKE",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "CO",
+            "smallestCity" : "CHEYENNE MTN AFB",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "MI",
+            "smallestCity" : "LELAND",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "OR",
+            "smallestCity" : "KENT",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "GA",
+            "smallestCity" : "FORT STEWART",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "RI",
+            "smallestCity" : "CLAYVILLE",
+            "smallestPop" : 45
+        },
+        {
+            "_id" : "NM",
+            "smallestCity" : "ALGODONES",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "CA",
+            "smallestCity" : "TWIN BRIDGES",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "AR",
+            "smallestCity" : "TOMATO",
+            "smallestPop" : 0
+        },
+        {
+            "_id" : "MA",
+            "smallestCity" : "BUCKLAND",
+            "smallestPop" : 16
+        },
+        {
+            "_id" : "ME",
+            "smallestCity" : "BUSTINS ISLAND",
+            "smallestPop" : 0
+        }
+    ],
+    "ok" : 1
+}
