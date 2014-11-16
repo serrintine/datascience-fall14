@@ -663,39 +663,46 @@ Type "it" for more
 
 *********************************************************************
 
-var mapFunction = function() {
-    emit(this.state, this.pop);
+m = function() {
+    emit(this.state, { pop: this.pop, count: 1 });
 };
-                  
-var reduceFunction = function(key, value) {
-    return Array.avg(value);
+
+r = function(key, values) {
+    for (var i=1; i<values.length; i++) {
+        values[0].pop += values[i].pop;
+        values[0].count += values[i].count;
+    }
+    return values[0];
+};
+
+f = function(key, value) {
+    value.avg = value.pop / value.count;
+    return value;
 };
                   
 db.zipcodes.mapReduce(
-    mapFunction,
-    reduceFunction,
-    { out: "Average city population by state" }
+    m, r, { out: "Avg city pop by state", finalize: f }
 ).find()
 
 ===OUTPUT===
-{ "_id" : "AK", "value" : 1621.0776494316099 }
-{ "_id" : "AL", "value" : 6604.685668130592 }
-{ "_id" : "AR", "value" : 17500.826721704307 }
-{ "_id" : "AZ", "value" : 6185.8376294807695 }
-{ "_id" : "CA", "value" : 5014.419895507914 }
-{ "_id" : "CO", "value" : 3794.961518103799 }
-{ "_id" : "CT", "value" : 13052.604281719165 }
-{ "_id" : "DC", "value" : 25287.5 }
-{ "_id" : "DE", "value" : 6602.386111111111 }
-{ "_id" : "FL", "value" : 10550.253797453464 }
-{ "_id" : "GA", "value" : 8337.455969617935 }
-{ "_id" : "HI", "value" : 13852.8625 }
-{ "_id" : "IA", "value" : 6096.249782249409 }
-{ "_id" : "ID", "value" : 3725.1594358396237 }
-{ "_id" : "IL", "value" : 1416.5168669156944 }
-{ "_id" : "IN", "value" : 3053.8261303566273 }
-{ "_id" : "KS", "value" : 2213.4112286216487 }
-{ "_id" : "KY", "value" : 3517.082908698895 }
-{ "_id" : "LA", "value" : 3673.1212744438317 }
-{ "_id" : "MA", "value" : 9098.16854810248 }
+{ "_id" : "AK", "value" : { "pop" : 544698, "count" : 195, "avg" : 2793.3230769230768 } }
+{ "_id" : "AL", "value" : { "pop" : 4040587, "count" : 567, "avg" : 7126.255731922399 } }
+{ "_id" : "AR", "value" : { "pop" : 2350725, "count" : 578, "avg" : 4066.998269896194 } }
+{ "_id" : "AZ", "value" : { "pop" : 3665228, "count" : 270, "avg" : 13574.918518518518 } }
+{ "_id" : "CA", "value" : { "pop" : 29754890, "count" : 1516, "avg" : 19627.236147757256 } }
+{ "_id" : "CO", "value" : { "pop" : 3293755, "count" : 414, "avg" : 7955.929951690821 } }
+{ "_id" : "CT", "value" : { "pop" : 3287116, "count" : 263, "avg" : 12498.539923954373 } }
+{ "_id" : "DC", "value" : { "pop" : 606900, "count" : 24, "avg" : 25287.5 } }
+{ "_id" : "DE", "value" : { "pop" : 666168, "count" : 53, "avg" : 12569.207547169812 } }
+{ "_id" : "FL", "value" : { "pop" : 12686644, "count" : 804, "avg" : 15779.407960199005 } }
+{ "_id" : "GA", "value" : { "pop" : 6478216, "count" : 635, "avg" : 10201.914960629922 } }
+{ "_id" : "HI", "value" : { "pop" : 1108229, "count" : 80, "avg" : 13852.8625 } }
+{ "_id" : "IA", "value" : { "pop" : 2776420, "count" : 922, "avg" : 3011.301518438178 } }
+{ "_id" : "ID", "value" : { "pop" : 1006749, "count" : 244, "avg" : 4126.020491803279 } }
+{ "_id" : "IL", "value" : { "pop" : 11427576, "count" : 1237, "avg" : 9238.137429264349 } }
+{ "_id" : "IN", "value" : { "pop" : 5544136, "count" : 676, "avg" : 8201.384615384615 } }
+{ "_id" : "KS", "value" : { "pop" : 2475285, "count" : 715, "avg" : 3461.937062937063 } }
+{ "_id" : "KY", "value" : { "pop" : 3675484, "count" : 809, "avg" : 4543.243510506799 } }
+{ "_id" : "LA", "value" : { "pop" : 4217595, "count" : 464, "avg" : 9089.644396551725 } }
+{ "_id" : "MA", "value" : { "pop" : 6016425, "count" : 474, "avg" : 12692.879746835442 } }
 Type "it" for more
