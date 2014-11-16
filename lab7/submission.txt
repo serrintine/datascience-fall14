@@ -179,44 +179,54 @@ OwnerId    CTR
 ===================== MongoDB Queries and Outputs
 mongoimport --db test --collection zipcodes --file zipData.json
 
-db.zipcodes.insert({ "_id" : "99950",
-                     "city" : "KETCHIKAN",
-                     "loc" : [ -133.18479, 55.942471 ],
-                     "pop" : 422,
-                     "state" : "AK" })
+db.zipcodes.insert({
+    "_id" : "99950",
+    "city" : "KETCHIKAN",
+    "loc" : [ -133.18479, 55.942471 ],
+    "pop" : 422,
+    "state" : "AK"
+})
 
-1) db.zipcodes.find( { pop: { $lt: 5000000 } }, { state: 1, city: 1, _id: 0 } )
-   { "city" : "AGAWAM", "state" : "MA" }
-   { "city" : "CUSHMAN", "state" : "MA" }
-   { "city" : "BARRE", "state" : "MA" }
-   { "city" : "BELCHERTOWN", "state" : "MA" }
-   { "city" : "BLANDFORD", "state" : "MA" }
-   { "city" : "BRIMFIELD", "state" : "MA" }
-   { "city" : "CHESTER", "state" : "MA" }
-   { "city" : "CHESTERFIELD", "state" : "MA" }
-   { "city" : "CHICOPEE", "state" : "MA" }
-   { "city" : "CHICOPEE", "state" : "MA" }
-   { "city" : "WESTOVER AFB", "state" : "MA" }
-   { "city" : "CUMMINGTON", "state" : "MA" }
-   { "city" : "MOUNT TOM", "state" : "MA" }
-   { "city" : "EAST LONGMEADOW", "state" : "MA" }
-   { "city" : "FEEDING HILLS", "state" : "MA" }
-   { "city" : "GILBERTVILLE", "state" : "MA" }
-   { "city" : "GOSHEN", "state" : "MA" }
-   { "city" : "GRANBY", "state" : "MA" }
-   { "city" : "TOLLAND", "state" : "MA" }
-   { "city" : "HADLEY", "state" : "MA" }
-   Type "it" for more
+*********************************************************************
 
-2) db.zipcodes.aggregate({
-       $group : {
+1) db.zipcodes.find(
+       { pop: { $lt: 5000000 } },
+       { state: 1, city: 1, pop: 1, _id: 0 }
+   )
+
+===OUTPUT===
+{ "city" : "AGAWAM", "pop" : 15338, "state" : "MA" }
+{ "city" : "CUSHMAN", "pop" : 36963, "state" : "MA" }
+{ "city" : "BARRE", "pop" : 4546, "state" : "MA" }
+{ "city" : "BELCHERTOWN", "pop" : 10579, "state" : "MA" }
+{ "city" : "BLANDFORD", "pop" : 1240, "state" : "MA" }
+{ "city" : "BRIMFIELD", "pop" : 3706, "state" : "MA" }
+{ "city" : "CHESTER", "pop" : 1688, "state" : "MA" }
+{ "city" : "CHESTERFIELD", "pop" : 177, "state" : "MA" }
+{ "city" : "CHICOPEE", "pop" : 23396, "state" : "MA" }
+{ "city" : "CHICOPEE", "pop" : 31495, "state" : "MA" }
+{ "city" : "WESTOVER AFB", "pop" : 1764, "state" : "MA" }
+{ "city" : "CUMMINGTON", "pop" : 1484, "state" : "MA" }
+{ "city" : "MOUNT TOM", "pop" : 16864, "state" : "MA" }
+{ "city" : "EAST LONGMEADOW", "pop" : 13367, "state" : "MA" }
+{ "city" : "FEEDING HILLS", "pop" : 11985, "state" : "MA" }
+{ "city" : "GILBERTVILLE", "pop" : 2385, "state" : "MA" }
+{ "city" : "GOSHEN", "pop" : 122, "state" : "MA" }
+{ "city" : "GRANBY", "pop" : 5526, "state" : "MA" }
+{ "city" : "TOLLAND", "pop" : 1652, "state" : "MA" }
+{ "city" : "HADLEY", "pop" : 4231, "state" : "MA" }
+Type "it" for more
+
+
+2) db.zipcodes.aggregate(
+       { $group : {
            _id : "$state",
            totalPop : { $sum : "$pop" }
-       }}, {
-       $sort : {
-           totalPop : -1 
-       }
-   })
+       }},
+       { $sort : { totalPop : -1 } }
+   )
+
+===OUTPUT===
 {
     "result" : [
         {
@@ -426,224 +436,7 @@ db.zipcodes.insert({ "_id" : "99950",
     ],
     "ok" : 1
 }
-> db.zipcodes.aggregate({
-...        $group : {
-...            _id : "$state",
-...            totalPop : { $sum : "$pop" }
-...        }}, {
-...        $sort : {
-...            totalPop : -1 
-...        }
-...    })
-{
-    "result" : [
-        {
-            "_id" : "CA",
-            "totalPop" : 29754890
-        },
-        {
-            "_id" : "NY",
-            "totalPop" : 17990402
-        },
-        {
-            "_id" : "TX",
-            "totalPop" : 16984601
-        },
-        {
-            "_id" : "FL",
-            "totalPop" : 12686644
-        },
-        {
-            "_id" : "PA",
-            "totalPop" : 11881643
-        },
-        {
-            "_id" : "IL",
-            "totalPop" : 11427576
-        },
-        {
-            "_id" : "OH",
-            "totalPop" : 10846517
-        },
-        {
-            "_id" : "MI",
-            "totalPop" : 9295297
-        },
-        {
-            "_id" : "NJ",
-            "totalPop" : 7730188
-        },
-        {
-            "_id" : "NC",
-            "totalPop" : 6628637
-        },
-        {
-            "_id" : "GA",
-            "totalPop" : 6478216
-        },
-        {
-            "_id" : "VA",
-            "totalPop" : 6181479
-        },
-        {
-            "_id" : "MA",
-            "totalPop" : 6016425
-        },
-        {
-            "_id" : "IN",
-            "totalPop" : 5544136
-        },
-        {
-            "_id" : "MO",
-            "totalPop" : 5110648
-        },
-        {
-            "_id" : "WI",
-            "totalPop" : 4891769
-        },
-        {
-            "_id" : "TN",
-            "totalPop" : 4876457
-        },
-        {
-            "_id" : "WA",
-            "totalPop" : 4866692
-        },
-        {
-            "_id" : "MD",
-            "totalPop" : 4781379
-        },
-        {
-            "_id" : "MN",
-            "totalPop" : 4372982
-        },
-        {
-            "_id" : "LA",
-            "totalPop" : 4217595
-        },
-        {
-            "_id" : "AL",
-            "totalPop" : 4040587
-        },
-        {
-            "_id" : "KY",
-            "totalPop" : 3675484
-        },
-        {
-            "_id" : "AZ",
-            "totalPop" : 3665228
-        },
-        {
-            "_id" : "SC",
-            "totalPop" : 3486703
-        },
-        {
-            "_id" : "CO",
-            "totalPop" : 3293755
-        },
-        {
-            "_id" : "CT",
-            "totalPop" : 3287116
-        },
-        {
-            "_id" : "OK",
-            "totalPop" : 3145585
-        },
-        {
-            "_id" : "OR",
-            "totalPop" : 2842321
-        },
-        {
-            "_id" : "IA",
-            "totalPop" : 2776420
-        },
-        {
-            "_id" : "MS",
-            "totalPop" : 2573216
-        },
-        {
-            "_id" : "KS",
-            "totalPop" : 2475285
-        },
-        {
-            "_id" : "AR",
-            "totalPop" : 2350725
-        },
-        {
-            "_id" : "WV",
-            "totalPop" : 1793146
-        },
-        {
-            "_id" : "UT",
-            "totalPop" : 1722850
-        },
-        {
-            "_id" : "NE",
-            "totalPop" : 1578139
-        },
-        {
-            "_id" : "NM",
-            "totalPop" : 1515069
-        },
-        {
-            "_id" : "ME",
-            "totalPop" : 1226648
-        },
-        {
-            "_id" : "NV",
-            "totalPop" : 1201833
-        },
-        {
-            "_id" : "NH",
-            "totalPop" : 1109252
-        },
-        {
-            "_id" : "HI",
-            "totalPop" : 1108229
-        },
-        {
-            "_id" : "ID",
-            "totalPop" : 1006749
-        },
-        {
-            "_id" : "RI",
-            "totalPop" : 1003218
-        },
-        {
-            "_id" : "MT",
-            "totalPop" : 798948
-        },
-        {
-            "_id" : "SD",
-            "totalPop" : 695397
-        },
-        {
-            "_id" : "DE",
-            "totalPop" : 666168
-        },
-        {
-            "_id" : "ND",
-            "totalPop" : 638272
-        },
-        {
-            "_id" : "DC",
-            "totalPop" : 606900
-        },
-        {
-            "_id" : "VT",
-            "totalPop" : 562758
-        },
-        {
-            "_id" : "AK",
-            "totalPop" : 544698
-        },
-        {
-            "_id" : "WY",
-            "totalPop" : 453528
-        }
-    ],
-    "ok" : 1
-}
+
 
 3) db.zipcodes.aggregate(
        { $group: {
@@ -653,268 +446,256 @@ db.zipcodes.insert({ "_id" : "99950",
        { $sort: { pop: 1 } },
        { $group: {
            _id : "$_id.state",
-           smallestCity: { $first: "$_id.city" },
-           smallestPop:  { $first: "$pop" }
-       }
-   })
+           smallestCity: { $first: "$_id.city" }
+       }}
+   )
+
+===OUTPUT===
 {
     "result" : [
         {
             "_id" : "DE",
-            "smallestCity" : "BETHEL",
-            "smallestPop" : 108
+            "smallestCity" : "BETHEL"
         },
         {
             "_id" : "MO",
-            "smallestCity" : "BENDAVIS",
-            "smallestPop" : 44
+            "smallestCity" : "BENDAVIS"
         },
         {
             "_id" : "IL",
-            "smallestCity" : "ANCONA",
-            "smallestPop" : 38
+            "smallestCity" : "ANCONA"
         },
         {
             "_id" : "OH",
-            "smallestCity" : "ISLE SAINT GEORG",
-            "smallestPop" : 38
+            "smallestCity" : "ISLE SAINT GEORG"
         },
         {
             "_id" : "NH",
-            "smallestCity" : "WEST NOTTINGHAM",
-            "smallestPop" : 27
+            "smallestCity" : "WEST NOTTINGHAM"
         },
         {
             "_id" : "DC",
-            "smallestCity" : "PENTAGON",
-            "smallestPop" : 21
+            "smallestCity" : "PENTAGON"
         },
         {
             "_id" : "ND",
-            "smallestCity" : "TROTTERS",
-            "smallestPop" : 12
+            "smallestCity" : "TROTTERS"
         },
         {
             "_id" : "MD",
-            "smallestCity" : "ANNAPOLIS JUNCTI",
-            "smallestPop" : 32
+            "smallestCity" : "ANNAPOLIS JUNCTI"
         },
         {
             "_id" : "MN",
-            "smallestCity" : "JOHNSON",
-            "smallestPop" : 12
+            "smallestCity" : "JOHNSON"
         },
         {
             "_id" : "UT",
-            "smallestCity" : "MODENA",
-            "smallestPop" : 9
+            "smallestCity" : "MODENA"
         },
         {
             "_id" : "WY",
-            "smallestCity" : "LOST SPRINGS",
-            "smallestPop" : 6
+            "smallestCity" : "LOST SPRINGS"
         },
         {
             "_id" : "AZ",
-            "smallestCity" : "HUALAPAI",
-            "smallestPop" : 2
+            "smallestCity" : "HUALAPAI"
         },
         {
             "_id" : "CT",
-            "smallestCity" : "EAST KILLINGLY",
-            "smallestPop" : 25
+            "smallestCity" : "EAST KILLINGLY"
         },
         {
             "_id" : "WA",
-            "smallestCity" : "BENGE",
-            "smallestPop" : 2
+            "smallestCity" : "BENGE"
         },
         {
             "_id" : "AL",
-            "smallestCity" : "ALLEN",
-            "smallestPop" : 0
+            "smallestCity" : "ALLEN"
         },
         {
             "_id" : "NV",
-            "smallestCity" : "TUSCARORA",
-            "smallestPop" : 1
+            "smallestCity" : "TUSCARORA"
         },
         {
             "_id" : "NE",
-            "smallestCity" : "LAKESIDE",
-            "smallestPop" : 5
+            "smallestCity" : "LAKESIDE"
         },
         {
             "_id" : "FL",
-            "smallestCity" : "CECIL FIELD NAS",
-            "smallestPop" : 0
+            "smallestCity" : "CECIL FIELD NAS"
         },
         {
             "_id" : "SD",
-            "smallestCity" : "ZEONA",
-            "smallestPop" : 8
+            "smallestCity" : "ZEONA"
         },
         {
             "_id" : "TX",
-            "smallestCity" : "FULTON",
-            "smallestPop" : 0
+            "smallestCity" : "FULTON"
         },
         {
             "_id" : "WI",
-            "smallestCity" : "CLAM LAKE",
-            "smallestPop" : 2
+            "smallestCity" : "CLAM LAKE"
         },
         {
             "_id" : "MS",
-            "smallestCity" : "CHUNKY",
-            "smallestPop" : 79
+            "smallestCity" : "CHUNKY"
         },
         {
             "_id" : "IA",
-            "smallestCity" : "DOUDS",
-            "smallestPop" : 15
+            "smallestCity" : "DOUDS"
         },
         {
             "_id" : "HI",
-            "smallestCity" : "NINOLE",
-            "smallestPop" : 0
+            "smallestCity" : "NINOLE"
         },
         {
             "_id" : "NC",
-            "smallestCity" : "GLOUCESTER",
-            "smallestPop" : 0
+            "smallestCity" : "GLOUCESTER"
         },
         {
             "_id" : "MT",
-            "smallestCity" : "MOSBY",
-            "smallestPop" : 7
+            "smallestCity" : "MOSBY"
         },
         {
             "_id" : "OK",
-            "smallestCity" : "SOUTHARD",
-            "smallestPop" : 8
+            "smallestCity" : "SOUTHARD"
         },
         {
             "_id" : "ID",
-            "smallestCity" : "KEUTERVILLE",
-            "smallestPop" : 0
+            "smallestCity" : "KEUTERVILLE"
         },
         {
             "_id" : "IN",
-            "smallestCity" : "WESTPOINT",
-            "smallestPop" : 145
+            "smallestCity" : "WESTPOINT"
         },
         {
             "_id" : "KY",
-            "smallestCity" : "BROWDER",
-            "smallestPop" : 0
+            "smallestCity" : "BROWDER"
         },
         {
             "_id" : "VT",
-            "smallestCity" : "UNIV OF VERMONT",
-            "smallestPop" : 0
+            "smallestCity" : "UNIV OF VERMONT"
         },
         {
             "_id" : "PA",
-            "smallestCity" : "HAMILTON",
-            "smallestPop" : 0
+            "smallestCity" : "HAMILTON"
         },
         {
             "_id" : "LA",
-            "smallestCity" : "FORDOCHE",
-            "smallestPop" : 0
+            "smallestCity" : "FORDOCHE"
         },
         {
             "_id" : "SC",
-            "smallestCity" : "QUINBY",
-            "smallestPop" : 0
+            "smallestCity" : "QUINBY"
         },
         {
             "_id" : "KS",
-            "smallestCity" : "ARNOLD",
-            "smallestPop" : 0
+            "smallestCity" : "ARNOLD"
         },
         {
             "_id" : "NJ",
-            "smallestCity" : "IMLAYSTOWN",
-            "smallestPop" : 17
+            "smallestCity" : "IMLAYSTOWN"
         },
         {
             "_id" : "WV",
-            "smallestCity" : "MOUNT CARBON",
-            "smallestPop" : 0
+            "smallestCity" : "MOUNT CARBON"
         },
         {
             "_id" : "TN",
-            "smallestCity" : "ALLRED",
-            "smallestPop" : 2
+            "smallestCity" : "ALLRED"
         },
         {
             "_id" : "VA",
-            "smallestCity" : "WALLOPS ISLAND",
-            "smallestPop" : 0
+            "smallestCity" : "WALLOPS ISLAND"
         },
         {
             "_id" : "AK",
-            "smallestCity" : "CHEVAK",
-            "smallestPop" : 0
+            "smallestCity" : "CHEVAK"
         },
         {
             "_id" : "NY",
-            "smallestCity" : "RAQUETTE LAKE",
-            "smallestPop" : 0
+            "smallestCity" : "RAQUETTE LAKE"
         },
         {
             "_id" : "CO",
-            "smallestCity" : "CHEYENNE MTN AFB",
-            "smallestPop" : 0
+            "smallestCity" : "CHEYENNE MTN AFB"
         },
         {
             "_id" : "MI",
-            "smallestCity" : "LELAND",
-            "smallestPop" : 0
+            "smallestCity" : "LELAND"
         },
         {
             "_id" : "OR",
-            "smallestCity" : "KENT",
-            "smallestPop" : 0
+            "smallestCity" : "KENT"
         },
         {
             "_id" : "GA",
-            "smallestCity" : "FORT STEWART",
-            "smallestPop" : 0
+            "smallestCity" : "FORT STEWART"
         },
         {
             "_id" : "RI",
-            "smallestCity" : "CLAYVILLE",
-            "smallestPop" : 45
+            "smallestCity" : "CLAYVILLE"
         },
         {
             "_id" : "NM",
-            "smallestCity" : "ALGODONES",
-            "smallestPop" : 0
+            "smallestCity" : "ALGODONES"
         },
         {
             "_id" : "CA",
-            "smallestCity" : "TWIN BRIDGES",
-            "smallestPop" : 0
+            "smallestCity" : "TWIN BRIDGES"
         },
         {
             "_id" : "AR",
-            "smallestCity" : "TOMATO",
-            "smallestPop" : 0
+            "smallestCity" : "TOMATO"
         },
         {
             "_id" : "MA",
-            "smallestCity" : "BUCKLAND",
-            "smallestPop" : 16
+            "smallestCity" : "BUCKLAND"
         },
         {
             "_id" : "ME",
-            "smallestCity" : "BUSTINS ISLAND",
-            "smallestPop" : 0
+            "smallestCity" : "BUSTINS ISLAND"
         }
     ],
     "ok" : 1
 }
 
+*********************************************************************
+
+var mapFunction = function() {
+    emit(this.state, this.pop);
+};
+                  
+var reduceFunction = function(key, value) {
+    return Array.avg(value);
+};
+                  
+db.zipcodes.mapReduce(
+    mapFunction,
+    reduceFunction,
+    { out: "Average city population by state" }
+).find()
+
+===OUTPUT===
+{ "_id" : "AK", "value" : 1621.0776494316099 }
+{ "_id" : "AL", "value" : 6604.685668130592 }
+{ "_id" : "AR", "value" : 17500.826721704307 }
+{ "_id" : "AZ", "value" : 6185.8376294807695 }
+{ "_id" : "CA", "value" : 5014.419895507914 }
+{ "_id" : "CO", "value" : 3794.961518103799 }
+{ "_id" : "CT", "value" : 13052.604281719165 }
+{ "_id" : "DC", "value" : 25287.5 }
+{ "_id" : "DE", "value" : 6602.386111111111 }
+{ "_id" : "FL", "value" : 10550.253797453464 }
+{ "_id" : "GA", "value" : 8337.455969617935 }
+{ "_id" : "HI", "value" : 13852.8625 }
+{ "_id" : "IA", "value" : 6096.249782249409 }
+{ "_id" : "ID", "value" : 3725.1594358396237 }
+{ "_id" : "IL", "value" : 1416.5168669156944 }
+{ "_id" : "IN", "value" : 3053.8261303566273 }
+{ "_id" : "KS", "value" : 2213.4112286216487 }
+{ "_id" : "KY", "value" : 3517.082908698895 }
+{ "_id" : "LA", "value" : 3673.1212744438317 }
+{ "_id" : "MA", "value" : 9098.16854810248 }
+Type "it" for more
