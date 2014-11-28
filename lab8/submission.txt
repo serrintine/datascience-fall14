@@ -1,24 +1,795 @@
 ===================== Storm: WordCountTopology.java
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.umd.assignment;
+
+import backtype.storm.Config;
+import backtype.storm.LocalCluster;
+import backtype.storm.StormSubmitter;
+import backtype.storm.task.ShellBolt;
+import backtype.storm.topology.BasicOutputCollector;
+import backtype.storm.topology.IRichBolt;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseBasicBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
+
+import org.umd.assignment.spout.RandomSentenceSpout;
+import org.umd.assignment.spout.TwitterSampleSpout;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.PriorityQueue;
+import java.util.Set;
+
+/**
+ * This topology demonstrates Storm's stream groupings and multilang capabilities.
+ */
+public class WordCountTopology {
+  public static class SplitSentence extends ShellBolt implements IRichBolt {
+
+    public SplitSentence() {
+      super("python", "splitsentence.py");
+    }
+
+    @Override
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+      declarer.declare(new Fields("word"));
+    }
+
+    @Override
+    public Map<String, Object> getComponentConfiguration() {
+      return null;
+    }
+  }
+
+  public static class WordCount extends BaseBasicBolt {
+    Map<String, Integer> counts = new HashMap<String, Integer>();
+
+    @Override
+    public void execute(Tuple tuple, BasicOutputCollector collector) {
+      
+        // ----------------- Task 2    ---------------------------------
+        //
+        //
+        //  Modify this code to exclude stop-words from counting.
+        //  Stopword list is provided in the lab folder. 
+        //
+        //
+        // ---------------------------------------------------------
+        
+        Set<String> stopWords = new HashSet<String>();
+        
+        try {
+            String in = "/home/serrintine/Repos/datascience-fall14/lab8/Stopwords.txt";
+            BufferedReader br = new BufferedReader(new FileReader(in));
+        
+            String sw = br.readLine();
+            while (sw != null) {
+                stopWords.add(sw.trim());
+                sw = br.readLine();
+            }
+                
+            br.close();
+        } catch (IOException e) {
+            System.exit(-1);
+        }
+
+        String word = tuple.getString(0);
+        if (!stopWords.contains(word) && !word.toLowerCase().contains("obama")) {
+            Integer count = counts.get(word);
+            
+            if (count == null) {
+                count = 0;
+            }
+            
+            count++;
+            counts.put(word, count);
+            collector.emit(new Values(word, count));
+        }
+    }
+
+    @Override
+    public void cleanup()
+    {
+        // ------------------------  Task 3 ---------------------------------------
+        //
+        //
+        //  This function gets called when the Stream processing finishes.
+        //  MODIFY this function to print the most frequent words that co-occur 
+        //  with Obama [The TwitterSimpleSpout already gives you Tweets that contain
+        //  the word obama].
+        //
+        //  Since multiple threads will be doing the same cleanup operation, writing the
+        //  output to a file might not work as desired. One way to do this would be
+        //  print the output (using System.out.println) and do a grep/awk/sed on that.
+        //
+        //--------------------------------------------------------------------------
+        
+        List<Entry<String, Integer>> top = findTop(counts);
+      
+        for (Entry<String, Integer> word : top) {
+            System.out.println(word.getKey() + " " + word.getValue());
+        }
+    }
+    
+    private static List<Entry<String, Integer>> findTop(Map<String, Integer> map) {        
+        List<Entry<String, Integer>> result = new ArrayList<Entry<String, Integer>>();
+        Set<Entry<String, Integer>> entries = map.entrySet();
+        PriorityQueue<Entry<String, Integer>> top = new PriorityQueue<Entry<String, Integer>>(10,
+            new Comparator<Entry<String, Integer>>() {
+                public int compare(Entry<String, Integer> one, Entry<String, Integer> two) {
+                    return (two.getValue()).compareTo(one.getValue());
+                }
+            }
+        );
+        
+        for (Entry<String, Integer> entry : entries) {
+            top.offer(entry);
+            if (top.size() > 10) {
+                top.poll();
+            }
+        }
+
+        while (top.size() > 0) {
+            result.add(top.poll());
+        }
+        
+        return result;
+    }
+
+    @Override
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+      declarer.declare(new Fields("word", "count"));
+    }
+  }
+
+  public static void main(String[] args) throws Exception {
+
+    TopologyBuilder builder = new TopologyBuilder();
+
+    // ---------------------------- Task 1 -------------------------------------
+    //
+    //        You need to use TwitterSampleSpout() for the assignemt. But, it won't work
+    //        unless you set up the access token correctly in the TwitterSampleSpout.java
+    //
+    //        RandomSentenceSpout() simply spits out a random sentence. 
+    //
+    //--------------------------------------------------------------------------
+
+    // Setting up a spout
+    //builder.setSpout("spout", new RandomSentenceSpout(), 3);
+    builder.setSpout("spout", new TwitterSampleSpout(), 3);
+
+    // Setting up bolts
+    builder.setBolt("split", new SplitSentence(), 3).shuffleGrouping("spout");
+    builder.setBolt("count", new WordCount(), 3).fieldsGrouping("split", new Fields("word"));
+
+    Config conf = new Config();
+    conf.setDebug(true);
+
+
+    if (args != null && args.length > 0) {
+      conf.setNumWorkers(3);
+
+      StormSubmitter.submitTopologyWithProgressBar(args[0], conf, builder.createTopology());
+    }
+    else {
+      conf.setMaxTaskParallelism(3);
+
+      LocalCluster cluster = new LocalCluster();
+      cluster.submitTopology("word-count", conf, builder.createTopology());
+
+      // --------------------------- Task 4 ---------------------------------
+      //
+      //    The sleep time simply indicates for how long you want to keep your
+      //    system up and running. 10000 (miliseconds) here means 10 seconds.
+      //     
+      //
+      // ----------------------------------------------------------------------
+
+      //Thread.sleep(10000);
+      Thread.sleep(600000);
+
+      cluster.shutdown(); // blot "cleanup" function is called when cluster is shutdown (only works in local mode)
+    }
+  }
+}
 
 
 
 ===================== Storm: TwitterSampleSpout.java
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+
+//package org.umd.assignment.spout;
+
+package org.umd.assignment.spout;
+
+import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import twitter4j.FilterQuery;
+import twitter4j.StallWarning;
+import twitter4j.Status;
+import twitter4j.StatusDeletionNotice;
+import twitter4j.StatusListener;
+import twitter4j.TwitterStream;
+import twitter4j.TwitterStreamFactory;
+import twitter4j.auth.AccessToken;
+import twitter4j.conf.ConfigurationBuilder;
+
+import backtype.storm.Config;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichSpout;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
+
+@SuppressWarnings("serial")
+public class TwitterSampleSpout extends BaseRichSpout {
+
+    SpoutOutputCollector _collector;
+    LinkedBlockingQueue<String> queue = null;
+    TwitterStream _twitterStream;
+    String consumerKey;
+    String consumerSecret;
+    String accessToken;
+    String accessTokenSecret;
+    String[] keyWords;
+    
+    public TwitterSampleSpout(String consumerKey, String consumerSecret,
+            String accessToken, String accessTokenSecret, String[] keyWords) {
+        this.consumerKey = consumerKey;
+        this.consumerSecret = consumerSecret;
+        this.accessToken = accessToken;
+        this.accessTokenSecret = accessTokenSecret;
+        this.keyWords = keyWords;
+    }
+
+
+    //----------------------- Task 0 -----------------------------------------
+    //
+    //  Use the following link (for visual help) to create a Twitter App for yourselves. In summary,
+    //  the steps are:
+    //              (a) Go to apps.twitter.com
+    //              (b) Create an App [Put any website as an URL]
+    //              (c) Go to "keys and Access Token tab"
+    //              (d) Create you access token
+    //              (e) Copy over the ConsumerKey, consumerSecret, accesstoken, and accessTokenSecret
+    //                  in the TwitterSampleSpout()
+    //
+    //  https://dev.twitter.com/oauth/overview/application-owner-access-tokens
+    //    
+    //
+    //
+    //------------------------------------------------------------------------
+
+    public TwitterSampleSpout() {        
+        this.consumerKey = "FWjDlZ9zAIHya5Oum7zD4bvCT";
+        this.consumerSecret = "3omX7Ottsv1izjvWXUVFKs7RLbW4TMeRLhTpspGmJNqxD4sEsw";
+        this.accessToken = "330594909-xpDAwHTjsFTpGDL3IdcReEDNByOKYxuH46glIbPs";
+        this.accessTokenSecret = "jXzirw23upfpInP3RvsOPzp65x8LqesuwOIfatBXVUWKE";
+        this.keyWords = new String[1];
+        this.keyWords[0] = "Obama"; /* Filters All Tweets with word Obama */
+    }
+
+    @Override
+    public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
+        queue = new LinkedBlockingQueue<String>(1000);
+        _collector = collector;
+
+        StatusListener listener = new StatusListener() {
+
+            @Override
+            public void onStatus(Status status) {
+            
+                queue.offer(status.getText());
+            }
+
+            @Override
+            public void onDeletionNotice(StatusDeletionNotice sdn) {
+            }
+
+            @Override
+            public void onTrackLimitationNotice(int i) {
+            }
+
+            @Override
+            public void onScrubGeo(long l, long l1) {
+            }
+
+            @Override
+            public void onException(Exception ex) {
+            }
+
+            @Override
+            public void onStallWarning(StallWarning arg0) {
+                // TODO Auto-generated method stub
+
+            }
+
+        };
+
+        _twitterStream = new TwitterStreamFactory(
+                new ConfigurationBuilder().setJSONStoreEnabled(true).build())
+                .getInstance();
+
+        _twitterStream.addListener(listener);
+        _twitterStream.setOAuthConsumer(consumerKey, consumerSecret);
+        AccessToken token = new AccessToken(accessToken, accessTokenSecret);
+        _twitterStream.setOAuthAccessToken(token);
+        
+        if (keyWords.length == 0) {
+
+            _twitterStream.sample();
+        }
+
+        else {
+
+            FilterQuery query = new FilterQuery().track(keyWords);
+            _twitterStream.filter(query);
+        }
+
+    }
+
+    @Override
+    public void nextTuple() {
+        String ret = queue.poll();
+        if (ret == null) {
+            Utils.sleep(50);
+        } else {
+             
+            _collector.emit(new Values(ret));
+
+        }
+    }
+
+    @Override
+    public void close() {
+        _twitterStream.shutdown();
+    }
+
+    @Override
+    public Map<String, Object> getComponentConfiguration() {
+        Config ret = new Config();
+        ret.setMaxTaskParallelism(1);
+        return ret;
+    }
+
+    @Override
+    public void ack(Object id) {
+    }
+
+    @Override
+    public void fail(Object id) {
+    }
+
+    @Override
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+        declarer.declare(new Fields("tweet"));
+    }
+
+}
 
 
 
 ===================== Storm: Execution Output for a Sample Run
-
+RT  418
+@Ezby:  113
+How  129
+people  126
+dislike  123
+Barack  159
+means  245
+family  247
+&  187
+family  248
+means  246
+left  126
+behind.  113
+RT  419
+@IngrahamAngle:  15
+Ex-CIA  11
+officer  12
+Bob  11
+Baer  11
+"I'm  11
+#Benghazi:  11
+Democrat 
+I've  12
+seen  13
+American  21
+Administration  12
+lie  12
+ppl  14
+way…  11
+llama  1
+#5SOSLIVEQANDHEY  2
+"@Ezby:  7
+How  130
+people  127
+dislike  124
+Barack  160
+means  247
+family  249
+&  188
+family  250
+means  248
+left  127
+behind."  5
+RT  422
+@latimes:  3
+Can  7
+administration's  4
+effort  4
+toughen  4
+limits  4
+smog-forming  4
+ozone  6
+survive  4
+current  5
+political  7
+climate?  4
+http://t.…  13
+RT  423
+@CloydRivers:  19
+I’m  17
+freedom 
+bald  17
+eagles 
+thankful  20
+camo 
+cold  17
+ones 
+RT  424
+Dale  17
+@JohnFromCranber:  2
+Sr. 
+Chick-Fil-A  17
+&  189
+shotguns 
+Pursuing  1
+Attkisson:  1
+Aggressive  1
+Campaign  1
+Freedom  1
+Stifle  1
+Ob…  17
+else  17
+pisses  17
+Press  1
+http://t.co/XTUJVU7cfp  1
+…  21
+…Time  1
+Ameri…  1
+Ferguson  20
+terrorism#racism  1
+Europe  2
+worst  1
+country  1
+RT  425
+@Ezby:  114
+How  131
+people  128
+dislike  125
+Barack  161
+means  249
+family  251
+&  190
+means  250
+family  252
+left  128
+behind.  114
+RT  426
+@_KayyNichole:  1
+“@Ezby:  4
+How  132
+people  129
+dislike  126
+Barack  162
+means  251
+family  253
+&  191
+family  254
+means  252
+left  129
+behind.”😂😂😂  2
+Holder  7
+Wants  2
+Indictment…  1
+Tell  1
+The  26
+Grand  2
+Jury  2
+To  32
+At  3
+Look  1
+And  6
+First…  1
+  91
+Clinton 
+Him  1
+http://t.co/bTOhnfdjz6  1
+RT  427
+@Ezby:  115
+How  133
+people  130
+dislike  127
+Barack  163
+means  253
+family  255
+&  192
+family  256
+means  254
+left  130
+behind.  115
+Más  5
+de  27
+100  7
+organismos  5
+internacionales  5
+piden  5
+ampliar  5
+sus  5
+migratorias.  1
+http://t.co/9bsTFN2VeJ  1
+medidas  5
+RT  428
+@Ezby:  116
+How  134
+people  131
+dislike  128
+Barack  164
+means  255
+family  257
+&  193
+family  258
+means  256
+left  131
+behind.  116
+@RAISINBRANlALL  1
+OH  1
+SHIT  1
+ITS  1
+1AM  1
+IM  1
+TALKING  1
+AND  4
+ABOUT  1
+@catwahler  1
+@VickiMDonovan 
+fucktards  1
+20  1
+angry  1
+Marines  1
+do? 
+Ferguson  21
+payback. 
+REMOVE  1
+4  5
+TREASON  1
+@ZetsubouRally  1
+athletics  1
+stronger.  1
+We  5
+accept  1
+that's  4
+racism  1
+over.  2
+I  36
+support  2
+Hell  1
+drama  1
+RT  429
+amnesty 
+@ShekharGupta:  9
+Why  16
+clash:  1
+Businesses  1
+incentive  1
+R-Day  9
+hire  1
+$3 000
+selfie  11
+moment  9
+mere  9
+fundamental  9
+foreign  12
+policy  10
+http://t.co/dupqvQhmSj  1
+India's  9
+4th  9
+began 
+illegals  1
+htt…  9
+shift  10
+reform  10
+1991  9
+RT  430
+@latimes:  4
+Can  8
+effort  5
+administration's  5
+toughen  5
+smog-forming  5
+survive  5
+limits  5
+ozone  7
+current  6
+political  8
+climate?  5
+http://t.…  14
 
 
 
 ===================== Spark: Assignment.java
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import scala.Tuple2;
 
+import com.google.common.collect.Lists;
+
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.StorageLevels;
+import org.apache.spark.streaming.Duration;
+import org.apache.spark.streaming.api.java.JavaDStream;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
+import org.apache.spark.streaming.api.java.JavaReceiverInputDStream;
+import org.apache.spark.streaming.api.java.JavaStreamingContext;
+
+import java.util.regex.Pattern;
+
+public final class Assignment {
+    private static final Pattern SPACE = Pattern.compile(" ");
+
+    public static void main(String[] args) {
+
+        // Create the context with a 10 second batch size
+        SparkConf sparkConf = new SparkConf().setAppName("Assignment");
+        JavaStreamingContext ssc = new JavaStreamingContext(sparkConf,
+                new Duration(10000));
+
+        // Create a JavaReceiverInputDStream on target ip:port and count the
+        // words in input stream of \n delimited text (eg. generated by 'nc')
+        // Note that no duplication in storage level only for running locally.
+        // Replication necessary in distributed scenario for fault tolerance.
+        JavaReceiverInputDStream<String> lines = ssc
+            .socketTextStream(
+                "localhost", Integer.parseInt("9999"),
+                StorageLevels.MEMORY_AND_DISK_SER
+            );
+
+        JavaDStream<String> words = lines
+            .flatMap(new FlatMapFunction<String, String>() {
+                @Override
+                public Iterable<String> call(String x) {
+                    return Lists.newArrayList(SPACE.split(x));
+                }
+            });
+
+        JavaPairDStream<String, Integer> wordCounts = words
+            .filter(new Function<String, Boolean>() {
+                public Boolean call(String s) {
+                    return s.equalsIgnoreCase("#obama");
+                }
+            }).mapToPair(new PairFunction<String, String, Integer>() {
+                @Override
+                public Tuple2<String, Integer> call(String s) {
+                    return new Tuple2<String, Integer>(s.toLowerCase(), 1);
+                }
+            });
+
+        JavaPairDStream<String, Integer> slidingWindow = wordCounts
+            .reduceByKeyAndWindow(
+                new Function2<Integer, Integer, Integer>() {
+                    public Integer call(Integer i1, Integer i2) throws Exception {
+                        return i1 + i2;
+                    }
+                },
+                new Duration(30000),
+                new Duration(10000)
+            );
+
+        slidingWindow.print();
+
+        ssc.start();
+
+        ssc.awaitTermination();
+    }
+}
 
 
 
 ===================== Spark: Execution Output for a Sample Run
+-------------------------------------------
+Time: 1417151890000 ms
+-------------------------------------------
+(#obama,24)
 
+-------------------------------------------
+Time: 1417151900000 ms
+-------------------------------------------
+(#obama,64)
 
+-------------------------------------------
+Time: 1417151910000 ms
+-------------------------------------------
+(#obama,72)
 
+-------------------------------------------
+Time: 1417151920000 ms
+-------------------------------------------
+(#obama,56)
 
+-------------------------------------------
+Time: 1417151930000 ms
+-------------------------------------------
+(#obama,24)
+
+-------------------------------------------
+Time: 1417151940000 ms
+-------------------------------------------
+(#obama,32)
