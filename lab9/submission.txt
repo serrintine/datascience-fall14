@@ -1,39 +1,391 @@
 ===================== Neo4j Question 1
+QUERY
+***********
+MATCH (people:Person) WHERE people.born = 1964
+RETURN people.name
 
+OUTPUT
+***********
+Keanu Reeves
 
 
 ===================== Neo4j Question 2
+QUERY
+***********
+MATCH (wil:Person {name:"Wil Wheaton"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors)
+RETURN coActors.name
 
+OUTPUT
+***********
+OUTPUT:
+River Phoenix
+Jerry O'Connell
+Corey Feldman
+John Cusack
+Kiefer Sutherland
+Marshall Bell
 
 
 ===================== Neo4j Question 3
+QUERY
+(note: no need to create bidirectional relationships
+       in order to query for things bidirectionally)
+***********
+CREATE (AL:State {name:'Alabama'})
+CREATE (AZ:State {name:'Arizona'})
+CREATE (AR:State {name:'Arkansas'})
+CREATE (CA:State {name:'California'})
+CREATE (CO:State {name:'Colorado'})
+CREATE (CT:State {name:'Connecticut'})
+CREATE (DC:State {name:'District of Columbia'})
+CREATE (DE:State {name:'Delaware'})
+CREATE (FL:State {name:'Florida'})
+CREATE (GA:State {name:'Georgia'})
+CREATE (ID:State {name:'Idaho'})
+CREATE (IL:State {name:'Illinois'})
+CREATE (IN:State {name:'Indiana'})
+CREATE (IA:State {name:'Iowa'})
+CREATE (KS:State {name:'Kansas'})
+CREATE (KY:State {name:'Kentucky'})
+CREATE (LA:State {name:'Louisiana'})
+CREATE (ME:State {name:'Maine'})
+CREATE (MD:State {name:'Maryland'})
+CREATE (MA:State {name:'Massachusetts'})
+CREATE (MI:State {name:'Michigan'})
+CREATE (MN:State {name:'Minnesota'})
+CREATE (MS:State {name:'Mississippi'})
+CREATE (MO:State {name:'Missouri'})
+CREATE (MT:State {name:'Montana'})
+CREATE (NE:State {name:'Nebraska'})
+CREATE (NV:State {name:'Nevada'})
+CREATE (NH:State {name:'New Hampshire'})
+CREATE (NJ:State {name:'New Jersey'})
+CREATE (NM:State {name:'New Mexico'})
+CREATE (NY:State {name:'New York'})
+CREATE (NC:State {name:'North Carolina'})
+CREATE (ND:State {name:'North Dakota'})
+CREATE (OH:State {name:'Ohio'})
+CREATE (OK:State {name:'Oklahoma'})
+CREATE (OR:State {name:'Oregon'})
+CREATE (PA:State {name:'Pennsylvania'})
+CREATE (RI:State {name:'Rhode Island'})
+CREATE (SC:State {name:'South Carolina'})
+CREATE (SD:State {name:'South Dakota'})
+CREATE (TN:State {name:'Tennessee'})
+CREATE (TX:State {name:'Texas'})
+CREATE (UT:State {name:'Utah'})
+CREATE (VT:State {name:'Vermont'})
+CREATE (VA:State {name:'Virginia'})
+CREATE (WA:State {name:'Washington'})
+CREATE (WV:State {name:'West Virginia'})
+CREATE (WI:State {name:'Wisconsin'})
+CREATE (WY:State {name:'Wyoming'})
+CREATE (AL)-[:BORDERS {length:196.1}]->(FL)
+CREATE (AL)-[:BORDERS {length:291.3}]->(GA)
+CREATE (AL)-[:BORDERS {length:323.9}]->(MS)
+CREATE (AL)-[:BORDERS {length:146.7}]->(TN)
+CREATE (AR)-[:BORDERS {length:166.5}]->(LA)
+CREATE (AR)-[:BORDERS {length:325.3}]->(MO)
+CREATE (AR)-[:BORDERS {length:282.8}]->(MS)
+CREATE (AR)-[:BORDERS {length:198.2}]->(OK)
+CREATE (AR)-[:BORDERS {length:125.1}]->(TN)
+CREATE (AR)-[:BORDERS {length:65.0}]->(TX)
+CREATE (AZ)-[:BORDERS {length:198.4}]->(CA)
+CREATE (AZ)-[:BORDERS {length:0.0}]->(CO)
+CREATE (AZ)-[:BORDERS {length:391.0}]->(NM)
+CREATE (AZ)-[:BORDERS {length:181.4}]->(NV)
+CREATE (AZ)-[:BORDERS {length:275.8}]->(UT)
+CREATE (CA)-[:BORDERS {length:608.2}]->(NV)
+CREATE (CA)-[:BORDERS {length:216.3}]->(OR)
+CREATE (CO)-[:BORDERS {length:207.7}]->(KS)
+CREATE (CO)-[:BORDERS {length:173.2}]->(NE)
+CREATE (CO)-[:BORDERS {length:333.0}]->(NM)
+CREATE (CO)-[:BORDERS {length:52.9}]->(OK)
+CREATE (CO)-[:BORDERS {length:276.1}]->(UT)
+CREATE (CO)-[:BORDERS {length:260.2}]->(WY)
+CREATE (CT)-[:BORDERS {length:86.5}]->(MA)
+CREATE (CT)-[:BORDERS {length:82.3}]->(NY)
+CREATE (CT)-[:BORDERS {length:40.3}]->(RI)
+CREATE (DC)-[:BORDERS {length:24.6}]->(MD)
+CREATE (DC)-[:BORDERS {length:1.9}]->(VA)
+CREATE (DE)-[:BORDERS {length:122.0}]->(MD)
+CREATE (DE)-[:BORDERS {length:1.4}]->(NJ)
+CREATE (DE)-[:BORDERS {length:22.6}]->(PA)
+CREATE (FL)-[:BORDERS {length:261.4}]->(GA)
+CREATE (GA)-[:BORDERS {length:68.6}]->(NC)
+CREATE (GA)-[:BORDERS {length:249.6}]->(SC)
+CREATE (GA)-[:BORDERS {length:72.6}]->(TN)
+CREATE (IA)-[:BORDERS {length:262.1}]->(MN)
+CREATE (IA)-[:BORDERS {length:235.0}]->(MO)
+CREATE (IA)-[:BORDERS {length:148.9}]->(NE)
+CREATE (IA)-[:BORDERS {length:85.6}]->(SD)
+CREATE (IA)-[:BORDERS {length:86.7}]->(WI)
+CREATE (ID)-[:BORDERS {length:569.8}]->(MT)
+CREATE (ID)-[:BORDERS {length:153.0}]->(NV)
+CREATE (ID)-[:BORDERS {length:305.8}]->(OR)
+CREATE (ID)-[:BORDERS {length:153.6}]->(UT)
+CREATE (ID)-[:BORDERS {length:210.3}]->(WA)
+CREATE (ID)-[:BORDERS {length:170.7}]->(WY)
+CREATE (IL)-[:BORDERS {length:200.5}]->(IA)
+CREATE (IL)-[:BORDERS {length:295.5}]->(IN)
+CREATE (IL)-[:BORDERS {length:122.4}]->(KY)
+CREATE (IL)-[:BORDERS {length:331.6}]->(MO)
+CREATE (IL)-[:BORDERS {length:144.4}]->(WI)
+CREATE (IN)-[:BORDERS {length:296.0}]->(KY)
+CREATE (IN)-[:BORDERS {length:108.4}]->(MI)
+CREATE (IN)-[:BORDERS {length:178.8}]->(OH)
+CREATE (KS)-[:BORDERS {length:307.5}]->(MO)
+CREATE (KS)-[:BORDERS {length:356.5}]->(NE)
+CREATE (KS)-[:BORDERS {length:409.1}]->(OK)
+CREATE (KY)-[:BORDERS {length:59.8}]->(MO)
+CREATE (KY)-[:BORDERS {length:155.5}]->(OH)
+CREATE (KY)-[:BORDERS {length:338.5}]->(TN)
+CREATE (KY)-[:BORDERS {length:119.0}]->(VA)
+CREATE (KY)-[:BORDERS {length:79.1}]->(WV)
+CREATE (LA)-[:BORDERS {length:456.6}]->(MS)
+CREATE (LA)-[:BORDERS {length:222.7}]->(TX)
+CREATE (MA)-[:BORDERS {length:86.7}]->(NH)
+CREATE (MA)-[:BORDERS {length:49.4}]->(NY)
+CREATE (MA)-[:BORDERS {length:62.6}]->(RI)
+CREATE (MA)-[:BORDERS {length:40.9}]->(VT)
+CREATE (MD)-[:BORDERS {length:195.7}]->(PA)
+CREATE (MD)-[:BORDERS {length:253.7}]->(VA)
+CREATE (MD)-[:BORDERS {length:174.0}]->(WV)
+CREATE (ME)-[:BORDERS {length:159.3}]->(NH)
+CREATE (MI)-[:BORDERS {length:69.7}]->(OH)
+CREATE (MI)-[:BORDERS {length:205.1}]->(WI)
+CREATE (MN)-[:BORDERS {length:217.1}]->(ND)
+CREATE (MN)-[:BORDERS {length:180.8}]->(SD)
+CREATE (MN)-[:BORDERS {length:291.1}]->(WI)
+CREATE (MO)-[:BORDERS {length:53.6}]->(NE)
+CREATE (MO)-[:BORDERS {length:34.4}]->(OK)
+CREATE (MO)-[:BORDERS {length:60.9}]->(TN)
+CREATE (MS)-[:BORDERS {length:119.2}]->(TN)
+CREATE (MT)-[:BORDERS {length:210.8}]->(ND)
+CREATE (MT)-[:BORDERS {length:65.3}]->(SD)
+CREATE (MT)-[:BORDERS {length:377.7}]->(WY)
+CREATE (NC)-[:BORDERS {length:312.2}]->(SC)
+CREATE (NC)-[:BORDERS {length:218.9}]->(TN)
+CREATE (NC)-[:BORDERS {length:327.7}]->(VA)
+CREATE (ND)-[:BORDERS {length:359.0}]->(SD)
+CREATE (NE)-[:BORDERS {length:399.4}]->(SD)
+CREATE (NE)-[:BORDERS {length:138.0}]->(WY)
+CREATE (NH)-[:BORDERS {length:180.0}]->(VT)
+CREATE (NJ)-[:BORDERS {length:103.4}]->(NY)
+CREATE (NJ)-[:BORDERS {length:150.9}]->(PA)
+CREATE (NM)-[:BORDERS {length:34.5}]->(OK)
+CREATE (NM)-[:BORDERS {length:536.2}]->(TX)
+CREATE (NM)-[:BORDERS {length:0.0}]->(UT)
+CREATE (NV)-[:BORDERS {length:152.5}]->(OR)
+CREATE (NV)-[:BORDERS {length:344.6}]->(UT)
+CREATE (NY)-[:BORDERS {length:306.1}]->(PA)
+CREATE (NY)-[:BORDERS {length:80.3}]->(VT)
+CREATE (OH)-[:BORDERS {length:92.4}]->(PA)
+CREATE (OH)-[:BORDERS {length:243.5}]->(WV)
+CREATE (OK)-[:BORDERS {length:715.4}]->(TX)
+CREATE (OR)-[:BORDERS {length:385.8}]->(WA)
+CREATE (PA)-[:BORDERS {length:118.6}]->(WV)
+CREATE (SD)-[:BORDERS {length:137.7}]->(WY)
+CREATE (TN)-[:BORDERS {length:110.7}]->(VA)
+CREATE (UT)-[:BORDERS {length:173.1}]->(WY)
+CREATE (VA)-[:BORDERS {length:381.2}]->(WV)
 
+OUTPUT
+***********
+Added 49 labels, created 49 nodes, set 158 properties,
+created 109 relationships, returned 0 rows in 448 ms
 
 
 ===================== Neo4j Question 4
+QUERY
+***********
+MATCH (n:State)-[:BORDERS]-(AZ {name:'Arizona'}),
+(m:State)-[:BORDERS]-(CO {name:'Colorado'})
+RETURN FILTER (x IN n.name WHERE x IN m.name)
 
+OUTPUT
+***********
+New Mexico
+Utah
 
 
 ===================== Neo4j Question 5
+QUERY
+***********
+MATCH (CA {name:'California'})-[*3]-(n)
+RETURN DISTINCT n.name
 
+OUTPUT
+***********
+Washington
+California
+Idaho
+Wyoming
+Arizona
+Colorado
+New Mexico
+Utah
+Montana
+Oregon
+Nevada
+Kansas
+Nebraska
+Oklahoma
+Texas
 
 
 ===================== GraphX Question 1
+CODE
+***********
+val counts = graph.triangleCount.vertices
+val users = vertexRDD.join(counts).map{case (id,(name,tc)) => (name,tc)}
+users.collect.foreach{case ((name,age),tc) => print(name + " articipates in " + tc + " triangles.\n")}
 
-
+OUTPUT
+***********
+David participates in 1 triangle(s).
+Alice participates in 1 triangle(s).
+Ed participates in 2 triangle(s).
+Fran participates in 1 triangle(s).
+Bob participates in 2 triangle(s).
+Charlie participates in 2 triangle(s).
 
 
 ===================== GraphX Question 2
+CODE
+***********
+val olderUsers = graph.subgraph(vpred = (id,attr) => attr._2 > 30)
+val cc = olderUsers.connectedComponents.vertices
+val ccou = vertexRDD.join(cc).map{case (id,(name,cc)) => (name,cc)}
+ccou.collect.foreach{case ((name,age),cc) => print(name + " is in connected component " + cc + ".\n")}
 
-
+OUTPUT
+***********
+David is in connected component 4.
+Ed is in connected component 3.
+Fran is in connected component 3.
+Charlie is in connected component 3.
 
 
 ===================== GraphX Question 3
+CODE
+***********
+import org.apache.spark.graphx.util.GraphGenerators
+val graph: Graph[Double,Int] = GraphGenerators.rmatGraph(sc,40,200).mapVertices((id,_) => id.toDouble)
 
+val followers: VertexRDD[(Double,Double)] = graph.mapReduceTriplets[(Double,Double)](
+  triplet => Iterator((triplet.dstId,(triplet.srcAttr,triplet.srcAttr))),
+  (a,b) => {
+    val x = List(a._1, b._1, a._2, b._2).max
+    val y1 = if (a._1 < x) a._1 else if (b._1 < x) b._1 else if (a._2 < x) a._2 else b._2
+    val y2 = if (b._1 < x && b._1 > y1) b._1 else y1
+    val y3 = if (a._2 < x && a._2 > y2) a._2 else y2
+    val y = if (b._2 < x && b._2 > y3) b._2 else y3
+    (x,y)
+  }
+)
+followers.collect.foreach(println(_))
 
+OUTPUT
+***********
+(52,(54.0,53.0))
+(56,(57.0,50.0))
+(48,(59.0,56.0))
+(32,(58.0,52.0))
+(36,(60.0,54.0))
+(40,(60.0,49.0))
+(60,(63.0,61.0))
+(44,(51.0,46.0))
+(61,(62.0,61.0))
+(41,(61.0,57.0))
+(53,(54.0,53.0))
+(57,(62.0,57.0))
+(37,(55.0,51.0))
+(33,(56.0,51.0))
+(45,(57.0,53.0))
+(49,(56.0,50.0))
+(34,(56.0,40.0))
+(54,(53.0,48.0))
+(46,(62.0,56.0))
+(50,(56.0,54.0))
+(62,(62.0,52.0))
+(42,(56.0,54.0))
+(38,(54.0,46.0))
+(58,(58.0,43.0))
+(39,(63.0,56.0))
+(47,(47.0,43.0))
+(55,(54.0,53.0))
+(59,(53.0,49.0))
+(35,(52.0,49.0))
+(51,(63.0,54.0))
+(63,(55.0,51.0))
+(43,(62.0,44.0))
 
 
 ===================== GraphX Question 4
+CODE
+***********
+val graph2 = graph1.reverse
+val border1: VertexRDD[(String,Double)] = graph1.mapReduceTriplets[(String,Double)](
+  edge => Iterator((edge.dstId,(edge.srcAttr,edge.attr))),
+  (a,b) => if (a._2 > b._2) a else b
+  //Some((graph1.vertices,EdgeDirection.Either))
+)
+border1.collect.foreach(println(_))
+val border2: VertexRDD[(String,Double)] = graph2.mapReduceTriplets[(String,Double)](
+  edge => Iterator((edge.dstId,(edge.srcAttr,edge.attr))),
+  (a,b) => if (a._2 > b._2) a else b
+)
+border2.collect.foreach(println(_))
 
-
-
+OUTPUT
+***********
+(48,(Minnesota,291.1))
+(24,(Illinois,331.6))
+(40,(Nebraska,399.4))
+(44,(New Hampshire,180.0))
+(41,(Kentucky,338.5))
+(25,(Idaho,569.8))
+(37,(New York,306.1))
+(49,(Montana,377.7))
+(46,(Oregon,385.8))
+(42,(Oklahoma,715.4))
+(38,(Massachusetts,62.6))
+(10,(Alabama,291.3))
+(39,(North Carolina,312.2))
+(47,(Virginia,381.2))
+(27,(California,608.2))
+(23,(Louisiana,456.6))
+(43,(Nevada,344.6))
+(4,(Nevada,608.2))
+(16,(Tennessee,338.5))
+(28,(Vermont,180.0))
+(32,(Virginia,327.7))
+(36,(Washington,385.8))
+(8,(Maryland,122.0))
+(12,(Missouri,331.6))
+(20,(New Hampshire,86.7))
+(13,(Kentucky,296.0))
+(21,(Wisconsin,205.1))
+(29,(Pennsylvania,150.9))
+(33,(South Dakota,359.0))
+(45,(West Virginia,381.2))
+(1,(Mississippi,323.9))
+(17,(Mississippi,456.6))
+(9,(Georgia,261.4))
+(5,(New Mexico,333.0))
+(34,(West Virginia,243.5))
+(22,(Wisconsin,291.1))
+(30,(Texas,536.2))
+(14,(Minnesota,262.1))
+(6,(Massachusetts,86.5))
+(18,(New Hampshire,159.3))
+(26,(South Dakota,399.4))
+(2,(New Mexico,391.0))
+(19,(Virginia,253.7))
+(15,(Oklahoma,409.1))
+(11,(Montana,569.8))
+(35,(Texas,715.4))
+(3,(Missouri,325.3))
+(7,(Maryland,24.6))
+(31,(Pennsylvania,306.1))
