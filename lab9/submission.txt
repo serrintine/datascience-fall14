@@ -239,7 +239,7 @@ CODE
 ***********
 val counts = graph.triangleCount.vertices
 val users = vertexRDD.join(counts).map{case (id,(name,tc)) => (name,tc)}
-users.collect.foreach{case ((name,age),tc) => print(name + " articipates in " + tc + " triangles.\n")}
+users.collect.foreach{case ((name,age),tc) => print(name + " participates in " + tc + " triangles.\n")}
 
 OUTPUT
 ***********
@@ -325,67 +325,60 @@ OUTPUT
 ===================== GraphX Question 4
 CODE
 ***********
-val graph2 = graph1.reverse
-val border1: VertexRDD[(String,Double)] = graph1.mapReduceTriplets[(String,Double)](
-  edge => Iterator((edge.dstId,(edge.srcAttr,edge.attr))),
-  (a,b) => if (a._2 > b._2) a else b
-  //Some((graph1.vertices,EdgeDirection.Either))
-)
-border1.collect.foreach(println(_))
-val border2: VertexRDD[(String,Double)] = graph2.mapReduceTriplets[(String,Double)](
-  edge => Iterator((edge.dstId,(edge.srcAttr,edge.attr))),
+val border: VertexRDD[(String,Double)] = graph1.mapReduceTriplets[(String,Double)](
+  edge => Iterator((edge.srcId,(edge.dstAttr,edge.attr)),(edge.dstId,(edge.srcAttr,edge.attr))),
   (a,b) => if (a._2 > b._2) a else b
 )
-border2.collect.foreach(println(_))
+border.collect.foreach(println(_))
 
 OUTPUT
 ***********
-(48,(Minnesota,291.1))
-(24,(Illinois,331.6))
-(40,(Nebraska,399.4))
-(44,(New Hampshire,180.0))
-(41,(Kentucky,338.5))
-(25,(Idaho,569.8))
-(37,(New York,306.1))
-(49,(Montana,377.7))
-(46,(Oregon,385.8))
-(42,(Oklahoma,715.4))
-(38,(Massachusetts,62.6))
-(10,(Alabama,291.3))
-(39,(North Carolina,312.2))
-(47,(Virginia,381.2))
-(27,(California,608.2))
-(23,(Louisiana,456.6))
-(43,(Nevada,344.6))
 (4,(Nevada,608.2))
 (16,(Tennessee,338.5))
 (28,(Vermont,180.0))
+(48,(Minnesota,291.1))
 (32,(Virginia,327.7))
 (36,(Washington,385.8))
+(24,(Illinois,331.6))
+(40,(Nebraska,399.4))
 (8,(Maryland,122.0))
 (12,(Missouri,331.6))
 (20,(New Hampshire,86.7))
+(44,(New Hampshire,180.0))
 (13,(Kentucky,296.0))
+(41,(Kentucky,338.5))
 (21,(Wisconsin,205.1))
+(25,(Idaho,569.8))
 (29,(Pennsylvania,150.9))
 (33,(South Dakota,359.0))
+(37,(New York,306.1))
 (45,(West Virginia,381.2))
 (1,(Mississippi,323.9))
 (17,(Mississippi,456.6))
 (9,(Georgia,261.4))
+(49,(Montana,377.7))
 (5,(New Mexico,333.0))
 (34,(West Virginia,243.5))
 (22,(Wisconsin,291.1))
+(46,(Oregon,385.8))
 (30,(Texas,536.2))
 (14,(Minnesota,262.1))
+(42,(Oklahoma,715.4))
 (6,(Massachusetts,86.5))
 (18,(New Hampshire,159.3))
+(38,(Massachusetts,62.6))
 (26,(South Dakota,399.4))
+(10,(Alabama,291.3))
 (2,(New Mexico,391.0))
 (19,(Virginia,253.7))
+(39,(North Carolina,312.2))
 (15,(Oklahoma,409.1))
+(47,(Virginia,381.2))
 (11,(Montana,569.8))
 (35,(Texas,715.4))
+(27,(California,608.2))
+(23,(Louisiana,456.6))
 (3,(Missouri,325.3))
 (7,(Maryland,24.6))
 (31,(Pennsylvania,306.1))
+(43,(Nevada,344.6))
