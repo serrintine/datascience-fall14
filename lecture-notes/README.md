@@ -14,12 +14,12 @@
 
 - [Implemetation of Relational Databases](relational-databases.md)
 
-- Distributed Programming Frameworks (TBP)
+- [Distributed Programming Frameworks](distributed.md)
 
 - [NoSQL Key-Value Stores](key-value-stores.md)
 
-- Data Streams/Real-time Analytics (TBP)
+- [Data Streams/Real-time Analytics](streaming.md)
 
 - [Graphs](graphs.md)
 
-- Cloud Computing (TBP)
+- [Cloud Computing](cloudcomputing.pptx)
